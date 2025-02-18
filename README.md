@@ -3,6 +3,7 @@
 ## 📌 개요
 마이크로서비스 아키텍처(MSA) 기반의 전자상거래 시스템. (현재 단일 판매자로 구성)
 각 서비스는 독립적으로 동작하며, `Git Subtree`를 이용해 하나의 메인 레포에서 관리.
+
 ![MSA쇼핑몰 drawio (1)](https://github.com/user-attachments/assets/cd261813-97ed-4162-b068-c8dfb0164867)
 
 ## 📌 서비스 구성 (Git Subtree)
