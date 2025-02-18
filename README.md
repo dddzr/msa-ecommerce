@@ -17,6 +17,11 @@
 | 🚚 **Delivery Service** | [delivery_service](https://github.com/dddzr/delivery_service.git) | 배송 관리 |
 | 💳 **Payment Service** | [payment_service](https://github.com/dddzr/payment_service.git) | 결제 관리 |
 
+### ⭐ 공통 참고사항
+🔹전체 서비스는 eureka에 등록됨.  
+🔹현재 DB연결된 서비스들은 모두 MariaDB, JPA 방식 이용.  
+🔹Product, Order, Delivery, Payment는 이벤트 기반 통신. (Kafka 실행 필요)  
+
 ## 📌 개발 환경 설정
 🔹개별 서비스 실행 방법  
 cd user_service # 각 서비스 디렉토리로 이동  
