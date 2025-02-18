@@ -1,0 +1,77 @@
+package com.example.gateway.config;
+
+import com.example.gateway.filter.JwtGatewayFilterFactory;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class GatewayConfig {
+
+    private JwtGatewayFilterFactory jwtGatewayFilterFactory;
+
+    public GatewayConfig(JwtGatewayFilterFactory jwtGatewayFilterFactory) {
+        this.jwtGatewayFilterFactory = jwtGatewayFilterFactory;
+    }
+
+     // 공통 메서드: 역할을 설정하는 메서드
+     private JwtGatewayFilterFactory.Config createConfigWithRole(String role) {
+        JwtGatewayFilterFactory.Config config = new JwtGatewayFilterFactory.Config();
+        config.setRequiredRole(role);
+        return config;
+    }
+
+    @Bean
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+        return builder.routes()
+                // 사용자 서비스
+                .route("user_route_auth_admin", r -> r.path("/user/api/admin/**").or().path("/user/api/users/authenticated/**")
+                        .filters(f -> f.stripPrefix(1)
+                                        .filter(jwtGatewayFilterFactory.apply(createConfigWithRole("ADMIN")))
+                                        // .filter((exchange, chain) -> { // 조건에 따라 요청 차단 가능
+                                        //         List<String> roles = exchange.getAttribute("roles");
+                                        //         if (roles != null && roles.contains("ADMIN")) {
+                                        //                 return chain.filter(exchange); // 요청을 다음 필터로 전달
+                                        //         } else {
+                                        //                 exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                                        //                 return exchange.getResponse().setComplete();
+                                        //         }
+                                        // })
+                                )
+                        .uri("lb://user-service"))
+                .route("user_route", r -> r.path("/user/api/users/**").or().path("/user/api/auth/**") // 인증 생략 (사용자 로그인, 회원가입 서비스)
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://user-service"))
+
+                // 상품 서비스 
+                .route("product_route", r -> r.path("/product/api/products/all")
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://product-service"))
+                .route("product_route_auth_user", r -> r.path("/product/**")
+                        .filters(f -> f.stripPrefix(1)
+                                        .filter(jwtGatewayFilterFactory.apply(createConfigWithRole("USER")))
+                                )
+                        .uri("lb://product-service"))
+                
+                // 주문 서비스
+                .route("order_route_auth_admin", r -> r.path("/order/api/orders/admin/**")
+                        .filters(f -> f.stripPrefix(1)
+                                .filter(jwtGatewayFilterFactory.apply(createConfigWithRole("ADMIN")))
+                                )
+                        .uri("lb://order-service"))
+                .route("order_route_auth_user", r -> r.path("/order/**")
+                        .filters(f -> f.stripPrefix(1)
+                                        .filter(jwtGatewayFilterFactory.apply(createConfigWithRole("USER")))
+                                )
+                        .uri("lb://order-service"))
+                
+                .build();
+    }
+}
+
+
+
+
+
+

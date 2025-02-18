@@ -1,0 +1,73 @@
+package com.example.gateway.filter;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.example.gateway.util.JwtTokenProvider;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import org.springframework.http.HttpStatus;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtTokenProvider jwtTokenProvider;
+
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
+
+    @SuppressWarnings("null")
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+        String token = getTokenFromRequest(request);
+
+        if (token != null && jwtTokenProvider.validateToken(token)) {
+            String username = jwtTokenProvider.getUsernameFromToken(token);
+            List<String> roles = jwtTokenProvider.getRolesFromToken(token);
+            UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(username, null, getAuthorities(roles));
+            // authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            // WebFlux에서는 ServerHttpRequest를 사용하므로, 별도로 setDetails()를 사용할 필요 없음.
+            // 필요한 경우 request 정보를 authentication 객체에 추가
+            SecurityContextHolder.getContext().setAuthentication(authentication); // 저장
+
+            // 헤더에 사용자 정보 추가
+            response.setHeader("X-User-Name", username);
+            response.setHeader("X-User-Roles", String.join(", ", roles));
+        } else {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401 Unauthorized
+            return;
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String getTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+
+    private Collection<SimpleGrantedAuthority> getAuthorities(List<String> roles) {
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                .collect(Collectors.toList());
+    }
+}
