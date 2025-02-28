@@ -9,11 +9,11 @@ import org.springframework.stereotype.Service;
 
 import com.example.product_service.dto.ProductDetailDTO;
 import com.example.product_service.dto.ProductDetailDTO.ProductStockDto;
-import com.example.product_service.model.ProductColors;
-// import com.example.product_service.model.ProductDocument;
-import com.example.product_service.model.ProductSizes;
-import com.example.product_service.model.ProductStocks;
-import com.example.product_service.model.Products;
+import com.example.product_service.entity.ProductColors;
+// import com.example.product_service.entity.ProductDocument;
+import com.example.product_service.entity.ProductSizes;
+import com.example.product_service.entity.ProductStocks;
+import com.example.product_service.entity.Products;
 import com.example.product_service.repository.ProductColorsRepository;
 import com.example.product_service.repository.ProductRepository;
 // import com.example.product_service.repository.ProductSearchRepository;

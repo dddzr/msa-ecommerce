@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.product_service.event.OrderCancelEvent;
 import com.example.product_service.event.OrderCreatedEvent;
-import com.example.product_service.model.ProductStocks;
-import com.example.product_service.model.Products;
+import com.example.product_service.entity.ProductStocks;
+import com.example.product_service.entity.Products;
 import com.example.product_service.repository.ProductRepository;
 // import com.example.product_service.repository.ProductSearchRepository;
 import com.example.product_service.repository.ProductStocksRepository;
