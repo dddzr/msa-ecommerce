@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.beans.BeanUtils;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.order_service.dto.request.OrderItemRequest;
 import com.example.order_service.dto.request.OrderRequest;
@@ -53,6 +54,7 @@ public class OrderCommandService {
         return order;
     }
 
+    @Transactional
     public Orders createOrder(OrderRequest request) {
         // 주문 객체 생성
         Orders order = dtoToOrder(request, OrderStatus.CREATED);
