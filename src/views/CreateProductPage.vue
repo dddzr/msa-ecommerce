@@ -70,18 +70,16 @@
   
   <script setup>
   import { ref, onMounted } from 'vue';
-  import { useRouter, useRoute } from 'vue-router';
+  import { useRoute } from 'vue-router';
   import { useUIStore } from '@/stores/uiStore';
   import { useProductStore } from '@/stores/productStore';
-  import { useUserStore } from '@/stores/userStore';
   import mainNavbar from '@/components/mainNavbar.vue';
   import loadingSpinner from '@/components/loadingSpinner.vue';
+  import { checkAuthAndGoPage } from '@/composables/useNavigate';
   import '@/assets/styles/postDetailPage.css';
 
   const productStore = useProductStore();
   const uiStore = useUIStore();
-  const userStore = useUserStore();
-  const router = useRouter();
   const route = useRoute();
 
   const form = ref({
@@ -97,7 +95,7 @@
     productStocks: []
   });
 
-  onMounted(() => {    
+  onMounted(() => {
     productStore.setMode(route.query.mode);
     if (productStore.mode === 'edit') {
       form.value = { ...productStore.currentProduct };
@@ -138,10 +136,7 @@
         await productStore.updateProduct(form.value);
         alert('상품이 수정되었습니다.');
       }
-      router.push({
-        name: "MyShop",
-        params: { username: userStore.user.username }
-      });
+      checkAuthAndGoPage("MyShop");
     } catch (error) {
       alert('작업을 완료할 수 없습니다.');
       console.error(error);

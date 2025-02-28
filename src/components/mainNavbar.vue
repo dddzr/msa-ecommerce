@@ -4,14 +4,14 @@
       <button @click="goHome">🏠 홈</button>
     </div>
     <div class="right-menu">
-      <button v-if="userStore.isLoggedIn" @click="goToPage('NotifyPage')" class="notification-btn">🔔
+      <button v-if="userStore.isLoggedIn" @click="checkAuthAndGoPage('NotifyPage')" class="notification-btn">🔔
           <!-- 읽지 않은 알림 숫자 표시 -->
           <span v-if="unreadNotificationsCount > 0" class="notification-badge">
           {{ unreadNotificationsCount }}
         </span>
       </button>
-      <button v-if="userStore.isLoggedIn" @click="goToPage('MyShop')">My Shop</button>
-      <button v-if="userStore.isLoggedIn" @click="goToPage('MyPage')">My Page</button>
+      <button v-if="userStore.isLoggedIn" @click="checkAuthAndGoPage('MyShop')">My Shop</button>
+      <button v-if="userStore.isLoggedIn" @click="checkAuthAndGoPage('MyPage')">My Page</button>
       <button v-if="userStore.isLoggedIn" @click="userStore.logout()">로그아웃</button>
       <button v-else @click="goToLogin">로그인</button>
     </div>
@@ -26,7 +26,7 @@
 
   const userStore = useUserStore();
   const router = useRouter();
-  const { goToPage } = useNavigate();
+  const { checkAuthAndGoPage } = useNavigate();
 
   onMounted(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('loginId') !== null) {

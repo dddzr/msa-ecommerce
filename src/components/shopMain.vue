@@ -25,9 +25,9 @@
         <button @click="applyFilter()">검색</button>
       </div>
       
-      <!-- 상품 목록 -->
+      <!-- 상품 목록 paginatedProducts-->
       <div class="product-list">
-        <div v-for="product in productStore.paginatedProducts" :key="product.productId" class="product-card" @click="goToViewProduct(product)">
+        <div v-for="product in productStore.filteredProducts" :key="product.productId" class="product-card" @click="goToViewProduct(product)">
           <img :src="product.image" :alt="product.name" class="product-image" />
           <div class="product-info">
             <h2>{{ product.name }}</h2>
@@ -70,7 +70,7 @@ const router = useRouter();
 const fetchProducts = async () => {
   uiStore.setIsLoading(true);
   try {
-    await productStore.fetchProducts(productStore.selectedCategory);
+    await productStore.fetchProducts(productStore.selectedCategory, 1);
   } catch (error) {
     console.error("Error in loading product list: ", error);
   } finally {

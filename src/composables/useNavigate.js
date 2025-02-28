@@ -5,8 +5,8 @@ export function useNavigate() {
   const router = useRouter();
   const userStore = useUserStore();
 
-  const goToPage = (pageName) => {
-    if (!userStore.user || !userStore.user.username) {
+  const checkAuthAndGoPage = (pageName) => {
+    if (!userStore.userInfo || !userStore.userInfo.username) {
       alert("로그인이 필요합니다!");
       router.push({ name: "LoginPage" });
       return;
@@ -14,9 +14,9 @@ export function useNavigate() {
 
     router.push({
       name: pageName,
-      params: { username: userStore.user.username }
+      params: { username: userStore.userInfo.username }
     });
   };
 
-  return { goToPage };
+  return { checkAuthAndGoPage };
 }

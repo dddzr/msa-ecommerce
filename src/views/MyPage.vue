@@ -9,21 +9,21 @@
 
         <div class="user-records-section">
             <div class="grid-layout">                
-                <!-- 내 게시글 -->
+                <!-- 주문/배송 -->
                 <div class="grid-item">
-                    <UserActivitySwiper :activity_type="'posted'" @viewMore="handleViewMore('posted')"/>
+                    <UserActivitySwiper :activity_type="'order'" @viewMore="handleViewMore('Order')"/>
                 </div>
-                <!-- 댓글 단 게시글 -->
+                <!-- 리뷰 -->
                 <div class="grid-item">
-                    <UserActivitySwiper :activity_type="'comment'" @viewMore="handleViewMore('comment')"/>
+                    <UserActivitySwiper :activity_type="'review'" @viewMore="handleViewMore('Review')"/>
                 </div>
-                <!-- 최근 본 게시글 -->
+                <!-- 최근 본-->
                 <div class="grid-item">
-                    <UserActivitySwiper :activity_type="'view'" @viewMore="handleViewMore('view')"/>
+                    <UserActivitySwiper :activity_type="'view'" @viewMore="handleViewMore('View')"/>
                 </div>                
-                <!-- 좋아요 한 게시글 -->
+                <!-- 찜 -> 보통 마이페이지 말고 별도 메뉴에 있네 -->
                 <div class="grid-item">
-                    <UserActivitySwiper :activity_type="'like'" @viewMore="handleViewMore('like')"/>
+                    <UserActivitySwiper :activity_type="'like'" @viewMore="handleViewMore('Like')"/>
                 </div>
             </div>
         </div>
@@ -31,12 +31,15 @@
 </template>
 
 <script setup>
+    import { useNavigate } from "@/composables/useNavigate";
     import mainNavbar from '@/components/mainNavbar.vue';
     import UserProfile from '@/components/UserProfile.vue';
     import UserActivitySwiper from '@/components/UserActivitySwiper.vue';
 
+    const { checkAuthAndGoPage } = useNavigate();
+
     const handleViewMore = (type) => {
-        alert(type + "더보기 미구현");
+        checkAuthAndGoPage(`My${type}`);
     };
 </script>
   

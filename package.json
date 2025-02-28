@@ -11,6 +11,7 @@
     "@hennge/vue3-pagination": "^1.0.17",
     "axios": "^1.7.9",
     "core-js": "^3.8.3",
+    "dayjs": "^1.11.13",
     "pinia": "^3.0.1",
     "swiper": "^11.2.4",
     "ui_service": "file:",
