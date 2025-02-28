@@ -1,4 +1,4 @@
-package com.example.user_service.model;
+package com.example.user_service.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,17 +11,17 @@ import lombok.Data;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer user_id;
+    private Integer userId;
     private String username;
     private String email;
     private String nickname;
     private String password;
     private String profile_picture;
-    private String created_at;
-    private String updated_at;
+    private String createdAt;
+    private String updatedAt;
     private String status;
-    private String last_login;
-    private Integer role_id;
+    private String lastLogin;
+    private Integer roleId;
     //private Set<Role> roles; // User와 관련된 역할
 
     // Getters and setters

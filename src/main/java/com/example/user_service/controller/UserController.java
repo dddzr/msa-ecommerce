@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.user_service.dto.UserProfileResponse;
 import com.example.user_service.dto.UserSignUpRequest;
-import com.example.user_service.model.User;
+import com.example.user_service.entity.User;
 import com.example.user_service.service.UserService;
 
 @RestController

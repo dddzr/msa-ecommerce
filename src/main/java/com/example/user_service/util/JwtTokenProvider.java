@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import com.example.user_service.model.User;
+import com.example.user_service.entity.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
