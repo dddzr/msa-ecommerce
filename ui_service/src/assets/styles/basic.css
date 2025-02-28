@@ -25,7 +25,7 @@ button {
 }
 
 input {
-  flex: 1;
+  /* flex: 1; */
   padding: 10px;
   font-size: var(--font-size-normal);
   border: 1px solid #ddd;
@@ -33,7 +33,7 @@ input {
 }
 
 select {
-  flex: 1;
+  /* flex: 1; */
   padding: 10px;
   font-size: var(--font-size-normal);
   border: 1px solid #ddd;

@@ -1,4 +1,11 @@
-# ui_service
+# ui_service (쇼핑몰 ui)
+
+## 📌 개요
+🔹ui 제공, accessToken 저장 및 사용.  
+🔹gateway에 cors 등록 되어있다.
+
+## 🛠 기술  
+🔹Vue3, axios
 
 ## Project setup
 ```

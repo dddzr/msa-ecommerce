@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { reactive } from 'vue';
 import axios from 'axios';
-import axiosApi from "@/composables/axiosApi";
+import axiosWhitAuth from "@/composables/axiosWhitAuth";
 
 export const useProductStore = defineStore('product', {
   state: () => ({
@@ -11,6 +11,7 @@ export const useProductStore = defineStore('product', {
     filteredProducts: [],
     searchType: "title",
     filterKeyword: "",
+    totalPages: 0,
     /* 페이지 */
     currentPage: 1,
     productsPerPage: 5,
@@ -27,6 +28,7 @@ export const useProductStore = defineStore('product', {
     },
     setCurrentPage(page) {
       this.currentPage = page;
+      this.fetchProducts(this.selectedCategory, page);
     },
     setMode(mode) {
       const allowedModes = ['view', 'create', 'edit'];
@@ -40,18 +42,25 @@ export const useProductStore = defineStore('product', {
     setCurrentProduct(product) {
       this.currentProduct = product;
     },
-    setFilteredProducts() {
-      this.filteredProducts = this.products.filter((product) => {
-        if(!product[this.searchType]) return false
-        return product[this.searchType].includes(this.filterKeyword);
-      });
+    setFilteredProducts() { // TODO: 프론트에서 검색과 필터를 처리x -> 백엔드로 옮겨야함.
+      // this.filteredProducts = this.products.filter((product) => {
+      //   if(!product[this.searchType]) return false
+      //   return product[this.searchType].includes(this.filterKeyword);
+      // });
     },     
-    async fetchProducts(board) { 
-      if (!board) return;
+    async fetchProducts(category, page) { 
+      if (!category) return;
       try {
-        const url = "/product/api/query/products/all";
-        const response = await axios.get(url);
-        this.products = response.data;
+        // const url = "/product/api/query/products/all";
+        // const response = await axios.get(url);
+        // this.products = response.data;
+
+        const url = "/product/api/query/products/filteredProducts";
+        const data = { page: page, keyword: this.filterKeyword };
+        const response = await axios.post(url, data);
+        this.products = response.data?.content;
+        this.filteredProducts = response.data?.content;
+        this.totalPages = response.data.totalPages;
       } catch (error) {
         console.error("error in fetchProducts: ", error);
         throw error;
@@ -61,7 +70,7 @@ export const useProductStore = defineStore('product', {
     initFilter() { 
       this.searchType = "title";
       this.filterKeyword = "";
-      this.filteredProducts = this.products;
+      // this.filteredProducts = this.products;
     },
     /* 게시글 */
     async fetchProductById(productId) { 
@@ -84,7 +93,7 @@ export const useProductStore = defineStore('product', {
       // product.category = this.selectedCategory.id;
       try {
         const url = "/product/api/command/products";
-        const response = await axiosApi.post(url, product);
+        const response = await axiosWhitAuth.post(url, product);
         console.log(response);
       } catch (error) {
         console.error("error in insertProduct: ", error);
@@ -95,7 +104,7 @@ export const useProductStore = defineStore('product', {
       if (!product || !product.productId) return;
       try {
         const url = `/product/api/command/products/${product.productId}`;
-        const response = await axiosApi.put(url, product);
+        const response = await axiosWhitAuth.put(url, product);
         console.log(response);
       } catch (error) {
         console.error("error in updateProduct: ", error);
@@ -106,7 +115,7 @@ export const useProductStore = defineStore('product', {
       if (!product || !product.productId) return;
       try {
         const url = `/product/api/command/products/${product.productId}`;
-        const response = await axiosApi.patch(url);
+        const response = await axiosWhitAuth.patch(url);
         console.log(response);
       } catch (error) {
         console.error("error in deleteProduct: ", error);
@@ -114,15 +123,15 @@ export const useProductStore = defineStore('product', {
       }
     }    
   },
-  getters: { //상태 변경 감지 (watch 같은 것)
-    paginatedProducts(state) {
-      const start = (state.currentPage - 1) * state.productsPerPage;
-      const end = start + state.productsPerPage;
-      return state.filteredProducts.slice(start, end);
-    },
-    // 전체 페이지 수 반환 (전체 게시물 수 / 한 페이지당 게시물 수)
-    totalPages(state) {
-      return Math.ceil(state.filteredProducts.length / state.productsPerPage);
-    }
-  }
+  // getters: { //상태 변경 감지 (watch 같은 것)
+  //   paginatedProducts(state) { // 프론트에서 검색과 필터를 처리x -> 백엔드로 옮겨야함.
+  //     const start = (state.currentPage - 1) * state.productsPerPage;
+  //     const end = start + state.productsPerPage;
+  //     return state.filteredProducts.slice(start, end);
+  //   },
+  //   // 전체 페이지 수 반환 (전체 게시물 수 / 한 페이지당 게시물 수)
+  //   totalPages(state) {
+  //     return Math.ceil(state.filteredProducts.length / state.productsPerPage);
+  //   }
+  // }
 });

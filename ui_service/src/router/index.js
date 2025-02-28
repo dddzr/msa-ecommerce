@@ -5,6 +5,7 @@ import CreateProductPage from '@/views/CreateProductPage.vue'
 import LoginPage from '@/views/LoginPage.vue'
 import SignUpPage from '@/views/SignUpPage.vue'
 import MyPage from '@/views/MyPage.vue'
+import OrderDelivery from '@/views/OrderDelivery.vue'
 import MyShop from '@/views/MyShop.vue'
 import NotifyPage from '@/views/NotifiyPage.vue'
 
@@ -66,6 +67,14 @@ const routes = [
       username: route.params.username
     }),
   },
+  {
+    path: '/myorder/:username',
+    name: 'MyOrder',
+    component: OrderDelivery,
+    props: route => ({
+      username: route.params.username
+    }),
+  }
 ]
 
 const router = createRouter({

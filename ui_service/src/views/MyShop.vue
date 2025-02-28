@@ -11,21 +11,17 @@
 
         <div class="user-records-section">
             <div class="grid-layout">                
-                <!-- 내 게시글 -->
+                <!-- 내 상품 -->
                 <div class="grid-item">
                     <UserActivitySwiper :activity_type="'posted'" @viewMore="handleViewMore('posted')"/>
                 </div>
-                <!-- 댓글 단 게시글 -->
+                <!-- 주문/배송 -->
+                <div class="grid-item">
+                    <UserActivitySwiper :activity_type="'posted'" @viewMore="handleViewMore('posted')"/>
+                </div>
+                <!-- 받은 문의? -->
                 <div class="grid-item">
                     <UserActivitySwiper :activity_type="'comment'" @viewMore="handleViewMore('comment')"/>
-                </div>
-                <!-- 최근 본 게시글 -->
-                <div class="grid-item">
-                    <UserActivitySwiper :activity_type="'view'" @viewMore="handleViewMore('view')"/>
-                </div>                
-                <!-- 좋아요 한 게시글 -->
-                <div class="grid-item">
-                    <UserActivitySwiper :activity_type="'like'" @viewMore="handleViewMore('like')"/>
                 </div>
             </div>
         </div>

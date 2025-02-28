@@ -10,28 +10,28 @@
             <div class="user-info-input-container">
                 <label>아이디</label>
                 <input
-                    v-model="userStore.user.username"
+                    v-model="userStore.userInfo.username"
                     :disabled=true
                 />
             </div>
             <div class="user-info-input-container">
                 <label>이메일</label>
                 <input
-                    v-model="userStore.user.email"
+                    v-model="userStore.userInfo.email"
                     :disabled=true
                 />
             </div>
             <div class="user-info-input-container">
                 <label>닉네임</label>
                 <input
-                    v-model="userStore.user.nickname"
+                    v-model="userStore.userInfo.nickname"
                     :disabled=true
                 />
             </div>
             <div class="user-info-input-container">
                 <label>역할</label>
                 <input
-                    v-model="userStore.user.role"
+                    v-model="userStore.userInfo.role"
                     :disabled=true
                 />
             </div>

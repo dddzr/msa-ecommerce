@@ -4,17 +4,17 @@ import axios from 'axios';
 export const useUserStore = defineStore('user', {
   state: () => ({
     isLoggedIn: localStorage.getItem('accessToken') ? true : false, // 로그인 상태
-    user: null,   // 로그인된 사용자 정보 {} JSON.parse(localStorage.getItem('user')) ?? 
-    accessToken: localStorage.getItem('accessToken') ?? null,             // 인증 토큰
+    userInfo: JSON.parse(localStorage.getItem('userInfo')) || null,   // 새로고침 테스트용
+    accessToken: localStorage.getItem('accessToken') ?? null, // 인증 토큰
     isAvailable: { // 회원가입 중복 체크 상태
       username: false,
       email: false
     },
     userActivity: {
-      like: [],
-      posted: [],
-      comment: [],
+      order: [],
+      review: [],
       view: [],
+      like: []
     },
     notifications: [
       { "id": 1, "content": "새 댓글이 달렸습니다.", "isRead": false, "createdAt": "2024-11-29T12:34:00" },
@@ -56,7 +56,7 @@ export const useUserStore = defineStore('user', {
     },
     logout() {
       this.isLoggedIn = false;
-      this.user = null;
+      this.userInfo = null;
       this.accessToken = null;
 
       // localStorage에서 토큰 삭제
@@ -70,7 +70,8 @@ export const useUserStore = defineStore('user', {
           headers: { Authorization: `Bearer ${this.accessToken}` }
         })
 
-        this.user = response.data;
+        this.userInfo = response.data;
+        localStorage.setItem('userInfo', JSON.stringify(response.data));
 
       } catch (error) {
         if(error.response?.data?.message){
@@ -109,9 +110,9 @@ export const useUserStore = defineStore('user', {
       let url = '';
       try {
         if(activityType == 'posted') {
-          url = '/user/getPostsByUsername/' + this.user.username;
+          url = '/user/getPostsByUsername/' + this.userInfo.username;
         }else {
-          url = '/user/getUserActivityRecords/' + this.user.username + '/' + activityType;
+          url = '/user/getUserActivityRecords/' + this.userInfo.username + '/' + activityType;
         }
         const response = await axios.get(url);
         // 상태 업데이트
@@ -120,11 +121,11 @@ export const useUserStore = defineStore('user', {
         console.error('Error fetching user activity data:', error);
       }
     },
-    async addLikeList(product, user_id){
+    async addLikeList(product, userId){
       if (!product) return;
       try {
         const url = "/user/api/users/addLikeList";
-        const response = await axios.post(url, null, {params: {productId: product.productId, user_id: user_id}});
+        const response = await axios.post(url, null, {params: {productId: product.productId, userId: userId}});
         console.log(response);
       } catch (error) {
         console.error("error in addLikeList: ", error);
@@ -132,9 +133,9 @@ export const useUserStore = defineStore('user', {
       }
     },
     async checkLikedProduct(post_id){
-      if(!this.user?.username && !post_id) return;
+      if(!this.userInfo?.username && !post_id) return;
       try {
-        let url = '/user/checkLikedProduct/' + post_id + "/" + this.user.username;
+        let url = '/user/checkLikedProduct/' + post_id + "/" + this.userInfo.username;
         const response = await axios.get(url);
         return response.data?.isLiked;
       } catch (error) {
@@ -143,7 +144,7 @@ export const useUserStore = defineStore('user', {
     },
     async fetchNotifications() {
       try {
-        const response = await axios.get('/user/notifications', { params: { username: this.user.username } });
+        const response = await axios.get('/user/notifications', { params: { username: this.userInfo.username } });
         this.notifications = response.data;
       } catch (error) {
         console.error('알림 데이터를 가져오는 데 실패했습니다:', error);

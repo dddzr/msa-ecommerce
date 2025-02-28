@@ -13,8 +13,8 @@
             <img src="@/assets/img/logo.png" alt="Thumbnail" /> <!-- 썸네일 이미지 TODO: DB에 컬럼 추가 및 dto 수정 -->
           </div>
           <div class="post-item">{{ post.title }}</div>
-          <div class="post-item">{{ post.user_id }}</div>
-          <div class="post-item">{{ post.created_at_formatted }}</div>
+          <div class="post-item">{{ post.userId }}</div>
+          <div class="post-item">{{ post.createdAt_formatted }}</div>
         </swiper-slide>
       </swiper>
     </div>
@@ -47,14 +47,14 @@
   let title = '';
 
   onMounted(async () => {
-    if (props.activity_type === 'posted') {
-      title = '내 게시글';
-    } else if (props.activity_type === 'comment') {
-      title = '댓글 단 게시글';
+    if (props.activity_type === 'order') {
+      title = '내 주문/배송';
+    } else if (props.activity_type === 'review') {
+      title = '내 리뷰';
     } else if (props.activity_type === 'view') {
-      title = '최근 본 게시글';
+      title = '최근 본 상품';
     } else if (props.activity_type === 'like') {
-      title = '좋아요 한 게시글';
+      title = '찜';
     }
 
     uiStore.setIsLoading(true);
