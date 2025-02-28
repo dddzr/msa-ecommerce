@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 import com.example.user_service.dto.UserProfileRequest;
 import com.example.user_service.dto.UserProfileResponse;
 import com.example.user_service.dto.UserSignUpRequest;
+import com.example.user_service.entity.User;
 import com.example.user_service.exception.InvalidCredentialsException;
-import com.example.user_service.model.User;
 import com.example.user_service.repository.UserRepository;
 import com.example.user_service.util.JwtTokenProvider;
 
@@ -95,7 +95,7 @@ public class UserService {
         user.setEmail(signUpRequest.getEmail());
         user.setNickname(signUpRequest.getNickname());
         user.setPassword(encodedPassword);  // 암호화된 비밀번호 저장
-        user.setRole_id(2);  // 기본적인 역할 설정 (추가 설정 필요시 수정)
+        user.setRoleId(2);  // 기본적인 역할 설정 (추가 설정 필요시 수정)
 
         // 4. 사용자 정보 저장
         try {
@@ -117,7 +117,7 @@ public class UserService {
         Optional<User> user = userRepository.findByUserIdCustom(id);
         UserProfileResponse response = new UserProfileResponse();
         user.ifPresent(u -> {
-            response.setId(u.getUser_id());
+            response.setId(u.getUserId());
             response.setUsername(u.getUsername());
             response.setEmail(u.getEmail());
         });
@@ -128,12 +128,12 @@ public class UserService {
         String encodedPassword = encodePassword(userProfileRequest.getPassword());
 
         User user = new User();
-        user.setUser_id(userProfileRequest.getId());
+        user.setUserId(userProfileRequest.getId());
         user.setUsername(userProfileRequest.getUsername());
         user.setEmail(userProfileRequest.getEmail());
         user.setNickname(userProfileRequest.getNickname());
         user.setPassword(encodedPassword);  // 암호화된 비밀번호 저장
-        user.setRole_id(2);  // 기본적인 역할 설정 (추가 설정 필요시 수정)
+        user.setRoleId(2);  // 기본적인 역할 설정 (추가 설정 필요시 수정)
         userRepository.save(user);
 
         try {
