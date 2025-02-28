@@ -1,7 +1,7 @@
 // package com.example.product_service.repository;
 
 // import com.example.product_service.dto.ProductRequest;
-// import com.example.product_service.model.ProductDocument;
+// import com.example.product_service.entity.ProductDocument;
 
 // import java.util.List;
 // import java.util.Optional;

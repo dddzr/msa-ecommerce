@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 // 클라이언트에 필요한 필드만 포함
 @Data
 public class ProductDetailDTO {
+    private Integer productId;
     private String name;
     private String description;
     private BigDecimal price;
@@ -32,9 +33,11 @@ public class ProductDetailDTO {
     @Data
     @AllArgsConstructor //모든 필드를 초기화하는 생성자
     @NoArgsConstructor //JPA나 JSON 직렬화 등을 위해 기본 생성자
-    public static class ProductStockDto {
-        private String sizeName; // 사이즈명 (예: S, M, L 등)
+    public static class ProductStockDto {   
+        private int colorId;
         private String colorName; // 색상명 (예: 빨강, 파랑 등)
+        private int sizeId;
+        private String sizeName; // 사이즈명 (예: S, M, L 등)
         private int stockQuantity; // 해당 사이즈, 색상 조합의 수량
     }
 }

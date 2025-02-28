@@ -1,4 +1,4 @@
-package com.example.product_service.model;
+package com.example.product_service.entity;
 
 import java.time.LocalDateTime;
 
