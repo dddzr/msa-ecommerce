@@ -42,7 +42,7 @@ public class UserController {
     }
 
     @GetMapping("/myInfo")
-    public ResponseEntity<?> getMyInfo(@RequestHeader(value = "X-User-Name") String username) {
+    public ResponseEntity<Object> getMyInfo(@RequestHeader(value = "X-User-Name") String username) {
         System.out.println("X-User-Name: " + username);
         Optional<User> user = userService.getUserByUserName(username);
         if(user == null){

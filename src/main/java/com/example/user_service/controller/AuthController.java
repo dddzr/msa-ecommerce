@@ -29,7 +29,7 @@ public class AuthController {
 
     // 로그인 API
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest loginRequest) {
         try {
             Map<String, String> tokens = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
     
@@ -66,7 +66,7 @@ public class AuthController {
      */
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
+    public ResponseEntity<Map<String, String>> refreshToken(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
         Map<String, String> tokens = userService.refreshAccessToken(refreshToken);
 
         saveRefreshToken(tokens.get("refreshToken"));
