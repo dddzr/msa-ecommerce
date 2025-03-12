@@ -3,6 +3,7 @@ package com.example.product_service.service;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -44,16 +45,47 @@ public class ProductCommandService {
         });
         return modelMapper.map(productDto, Products.class);
     }
+
+    public ProductDetailDTO productToProductDetailDTO(Products product) {
+        ModelMapper modelMapper = new ModelMapper();
+        
+        // 기본 필드 매핑
+        ProductDetailDTO productDto = modelMapper.map(product, ProductDetailDTO.class);
+
+        // 추가 매핑 (사이즈, 색상, 재고)
+        productDto.setSizes(
+            product.getSizes().stream()
+                .map(ProductSizes::getSizeName)
+                .collect(Collectors.toList())
+        );
+
+        productDto.setColors(
+            product.getColors().stream()
+                .map(ProductColors::getColorName)
+                .collect(Collectors.toList())
+        );
+
+        productDto.setProductStocks(
+            product.getStocks().stream()
+                .map(stock -> new ProductDetailDTO.ProductStockDto(
+                    stock.getSize().getSizeId(), stock.getSize().getSizeName(), stock.getColor().getColorId(), stock.getColor().getColorName(), stock.getStockQuantity()
+                    ))
+                .collect(Collectors.toList())
+        );
+
+        return productDto;
+    }
+
     // public ProductDocument productToProductDocument(Products products) {
     //     return modelMapper.map(products, ProductDocument.class);
     // }
 
-    public void insertProduct(ProductDetailDTO productRequest) {
+
+    public ProductDetailDTO insertProduct(ProductDetailDTO productRequest) {
         Products products = productDtoToProduct(productRequest);
         products = productRepository.save(products);
 
         productSizesRepository.deleteExistingSizes(products.getProductId());
-
         List<ProductSizes> savedSizes = new ArrayList<>();
         for (String size : productRequest.getSizes()) {
             ProductSizes sizeEntity = new ProductSizes();
@@ -64,7 +96,6 @@ public class ProductCommandService {
         }
 
         productColorsRepository.deleteExistingColors(products.getProductId());
-        // 새 색상 저장
         List<ProductColors> savedColors = new ArrayList<>();
         for (String color : productRequest.getColors()) {
             ProductColors colorEntity = new ProductColors();
@@ -74,26 +105,24 @@ public class ProductCommandService {
             savedColors.add(colorEntity);
         }
 
-        // 새로 재고 정보 저장
+        // 재고 정보 저장
+        List<ProductStocks> savedStocks = new ArrayList<>();
         for (ProductSizes size : savedSizes) {
             for (ProductColors color : savedColors) {
-                // 새 ProductStocks 객체 생성
-                ProductStocks productStocks = new ProductStocks();
-                productStocks.setProduct(products);
-                productStocks.setSize(size);
-                productStocks.setColor(color);
+                ProductStocks stock = new ProductStocks();
+                stock.setProduct(products);
+                stock.setSize(size);
+                stock.setColor(color);
 
-                int stockQuantity = 0;
-                for (ProductStockDto stockDto : productRequest.getProductStocks()) {
-                    if (stockDto.getSizeName().equals(size.getSizeName()) && stockDto.getColorName().equals(color.getColorName())) {
-                        stockQuantity = stockDto.getStockQuantity(); // 해당 수량을 가져옴
-                        break; // 찾으면 더 이상 반복할 필요 없음
-                    }
-                } 
-                productStocks.setStockQuantity(stockQuantity);
+                int stockQuantity = productRequest.getProductStocks().stream()
+                .filter(stockDto -> stockDto.getSizeName().equals(size.getSizeName()) &&
+                                    stockDto.getColorName().equals(color.getColorName()))
+                .map(ProductStockDto::getStockQuantity)
+                .findFirst()
+                .orElse(0);
 
-                // ProductStocks 저장
-                productStocksRepository.save(productStocks);
+                stock.setStockQuantity(stockQuantity);
+                savedStocks.add(productStocksRepository.save(stock));
             }
         }
 
@@ -103,9 +132,15 @@ public class ProductCommandService {
         // TODO: Redis 캐싱
         // String productKey = "product:" + event.getProductId();
         // redisTemplate.opsForValue().set(productKey, products, Duration.ofDays(30));
+
+        
+        products.setSizes(savedSizes);
+        products.setColors(savedColors);
+        products.setStocks(savedStocks);
+        return productToProductDetailDTO(products);
     }
 
-    public void updateProduct(int id, ProductDetailDTO productDto) {
+    public ProductDetailDTO updateProduct(int id, ProductDetailDTO productDto) {
         // 기존 상품 조회
         Products products = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -122,6 +157,8 @@ public class ProductCommandService {
         // TODO: Redis 캐싱
         // String productKey = "product:" + event.getProductId();
         // redisTemplate.opsForValue().set(productKey, products, Duration.ofDays(30));
+
+        return productToProductDetailDTO(products);
     }
 
     public void deleteProduct(int id) {

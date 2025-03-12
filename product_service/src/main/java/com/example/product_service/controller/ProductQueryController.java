@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,14 +22,16 @@ public class ProductQueryController {
 
     // 조회 (상품 목록, 상세 조회 등)
     @GetMapping("/{id}")
-    public ProductDetailDTO getProductDetail(@PathVariable("id") int id) {
-        return productQueryService.getProductDetail(id);
+    public ResponseEntity<ProductDetailDTO> getProductDetail(@PathVariable("id") int id) {
+        ProductDetailDTO product = productQueryService.getProductDetail(id);
+        return product != null ? ResponseEntity.ok(product) : ResponseEntity.notFound().build();
     }
 
-    // 조회 ( 캐시 dto )
+    // 조회 (캐시 DTO)
     @GetMapping("/productForCache/{id}")
-    public CachedProduct getProductForCache(@PathVariable("id") int id) {
-        return productQueryService.getProductForCache(id);
+    public ResponseEntity<CachedProduct> getProductForCache(@PathVariable("id") int id) {
+        CachedProduct product = productQueryService.getProductForCache(id);
+        return product != null ? ResponseEntity.ok(product) : ResponseEntity.notFound().build();
     }
 
     // @GetMapping("/search/{name}")
@@ -36,14 +39,20 @@ public class ProductQueryController {
     //     return productQueryService.getProductsByName(name);
     // }
 
+    // 전체 상품 조회
     @GetMapping("/all")
-    public List<Products> getAllProducts() {
-        return productQueryService.getAllProducts();
+    public ResponseEntity<List<Products>> getAllProducts() {
+        List<Products> products = productQueryService.getAllProducts();
+        return ResponseEntity.ok(products);
+        //return products.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(products);
     }
 
+    // 필터링된 상품 조회 (페이징 적용)
     @PostMapping("/filteredProducts")
-    public Page<Products> getFilteredProducts(@RequestBody Criteria criteria) {
-        return productQueryService.getFilteredProducts(criteria);
+    public ResponseEntity<Page<Products>> getFilteredProducts(@RequestBody Criteria criteria) {
+        Page<Products> products = productQueryService.getFilteredProducts(criteria);
+        return ResponseEntity.ok(products);
+        //return products.hasContent() ? ResponseEntity.ok(products) : ResponseEntity.noContent().build();
     }
 
 }
