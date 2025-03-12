@@ -8,7 +8,7 @@ public class Criteria {
     private int pageSize = 3; // 한 페이지당 개수
     private String keyword = ""; // 검색어
 
-    public int getPageStart() {
-        return (page - 1) * pageSize;
-    }
+    // public int getOffset() { //startIndex
+    //     return (page - 1) * pageSize;
+    // }
 }

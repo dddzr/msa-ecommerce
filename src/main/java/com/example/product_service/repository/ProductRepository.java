@@ -31,7 +31,7 @@ public interface ProductRepository extends JpaRepository<Products, Integer> {
         SELECT * FROM product
         WHERE name LIKE '%keyword%'
         ORDER BY id
-        LIMIT 10 OFFSET 10; -- limit: 개수, offset: 시작 번호 (페이지*개수)
+        LIMIT 10 OFFSET 10; -- limit: 개수(pageSize), offset: 시작 번호 (페이지*개수) 자동계산됨.
      */
     Page<Products> findByNameContaining(String keyword, Pageable pageable);
 }
