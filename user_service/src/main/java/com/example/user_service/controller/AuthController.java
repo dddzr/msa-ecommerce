@@ -76,7 +76,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    HttpHeaders saveRefreshToken(String refreshToken) {
+    private HttpHeaders saveRefreshToken(String refreshToken) {
         //refreshToken은 HttpOnly쿠키에 저장
         String cookieHeader = "refreshToken=" + refreshToken + "; Path=/; HttpOnly; Secure";
         HttpHeaders headers = new HttpHeaders();

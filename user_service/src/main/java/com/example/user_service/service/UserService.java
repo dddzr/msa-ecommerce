@@ -28,11 +28,11 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final CacheService cacheService;
 
-    public boolean checkPassword(String rawPassword, String encodedPassword) {
+    private boolean checkPassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 
-    public String encodePassword(String rawPassword) {
+    private String encodePassword(String rawPassword) {
         return passwordEncoder.encode(rawPassword);
     }
     
@@ -49,7 +49,7 @@ public class UserService {
         Map<String, String> tokens = jwtTokenProvider.generateTokens(user);
 
         // Refresh Token을 Redis 또는 DB에 저장 (보안상 필요)
-        cacheService.saveRefreshToken(username, tokens.get("refreshToken"));
+        // cacheService.saveRefreshToken(username, tokens.get("refreshToken"));
         return tokens;
     }
 
