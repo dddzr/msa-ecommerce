@@ -2,7 +2,9 @@
 
 ## 📌 개요  
 🔹주문 생성 이벤트 발행 및 주문 상태 관리  
-🔹주문 목록 제공 (주문 + 상품정보(캐시에서 조회 -> 없으면 FeignClient으로 product service에 요청))
+🔹주문 목록 제공 (주문 + 상품정보(캐시에서 조회 -> 없으면 FeignClient으로 product service에 요청))  
+🔹테이블 구조  
+![image](https://github.com/user-attachments/assets/bcb94ae5-c5fc-4de1-806a-220ee0ff9526)
 
 ## 🛠 기술  
 🔹Java (Spring Boot), MariaDB(JPA), Kafka, Redis(미완료), OpenFeign, SSE(결제창 반환 -> api call로 수정 예정)
