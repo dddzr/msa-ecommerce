@@ -3,6 +3,9 @@
 ## 📌 개요  
 🔹상품/재고 관리.
 
+🔹테이블 구조  
+![image](https://github.com/user-attachments/assets/ab6f15ce-0f37-4d5c-aa41-393706487b29)
+
 ## 🛠 기술  
 🔹Java (Spring Boot), MariaDB(JPA), Elastic Search(현재 적용x), Kafka
 
