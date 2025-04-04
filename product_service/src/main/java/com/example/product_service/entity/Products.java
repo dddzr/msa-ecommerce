@@ -34,7 +34,7 @@ public class Products {
     private BigDecimal price; // 상품 가격
     private String category; // 상품 카테고리
     private String brand; // 브랜드명
-    private String imageUrl; // 상품 이미지 URL
+    private String imageUrl; // 상품 대표 이미지 URL
     private boolean available; // 상품 구매 가능 여부
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)

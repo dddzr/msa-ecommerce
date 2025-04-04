@@ -1,4 +1,5 @@
 package com.example.product_service.repository;
+import com.example.product_service.dto.ProductDTO;
 import com.example.product_service.entity.Products;
 
 import java.util.List;
@@ -33,5 +34,5 @@ public interface ProductRepository extends JpaRepository<Products, Integer> {
         ORDER BY id
         LIMIT 10 OFFSET 10; -- limit: 개수(pageSize), offset: 시작 번호 (페이지*개수) 자동계산됨.
      */
-    Page<Products> findByNameContaining(String keyword, Pageable pageable);
+    Page<ProductDTO> findByNameContaining(String keyword, Pageable pageable);
 }
