@@ -6,9 +6,12 @@ import com.example.product_service.service.ProductCommandService;
 import lombok.RequiredArgsConstructor;
 
 import java.net.URI;
+import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/command/products")
@@ -17,12 +20,13 @@ public class ProductCommandController {
 
     private final ProductCommandService productCommandService;
 
-    @PostMapping
+    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<ProductDetailDTO> insertProduct(
-            @RequestBody ProductDetailDTO productRequest,
+            @RequestPart("product") ProductDetailDTO productRequest,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @RequestHeader(value = "X-User-Name", required = false) String username) {
 
-        ProductDetailDTO createdProduct = productCommandService.insertProduct(productRequest);
+        ProductDetailDTO createdProduct = productCommandService.insertProduct(productRequest, images);
 
         URI location = URI.create("/api/query/products/" + createdProduct.getProductId()); // 생성된 리소스 URI
         return ResponseEntity.created(location).body(createdProduct); // 201 Created + 생성된 상품 반환

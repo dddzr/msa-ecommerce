@@ -2,6 +2,7 @@ package com.example.product_service.controller;
 
 import com.example.product_service.dto.Criteria;
 import com.example.product_service.dto.ProductDetailDTO;
+import com.example.product_service.dto.ProductDTO;
 import com.example.product_service.dto.cache.CachedProduct;
 import com.example.product_service.entity.Products;
 import com.example.product_service.service.ProductQueryService;
@@ -40,17 +41,17 @@ public class ProductQueryController {
     // }
 
     // 전체 상품 조회
-    @GetMapping("/all")
-    public ResponseEntity<List<Products>> getAllProducts() {
-        List<Products> products = productQueryService.getAllProducts();
-        return ResponseEntity.ok(products);
-        //return products.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(products);
-    }
+    // @GetMapping("/all")
+    // public ResponseEntity<List<Products>> getAllProducts() {
+    //     List<Products> products = productQueryService.getAllProducts();
+    //     return ResponseEntity.ok(products);
+    //     //return products.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(products);
+    // }
 
     // 필터링된 상품 조회 (페이징 적용)
     @PostMapping("/filteredProducts")
-    public ResponseEntity<Page<Products>> getFilteredProducts(@RequestBody Criteria criteria) {
-        Page<Products> products = productQueryService.getFilteredProducts(criteria);
+    public ResponseEntity<Page<ProductDTO>> getFilteredProducts(@RequestBody Criteria criteria) {
+        Page<ProductDTO> products = productQueryService.getFilteredProducts(criteria);
         return ResponseEntity.ok(products);
         //return products.hasContent() ? ResponseEntity.ok(products) : ResponseEntity.noContent().build();
     }

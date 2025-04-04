@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 
 // 클라이언트에 필요한 필드만 포함
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class ProductDetailDTO {
     private Integer productId;
     private String name;

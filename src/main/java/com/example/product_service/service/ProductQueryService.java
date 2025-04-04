@@ -1,13 +1,12 @@
 package com.example.product_service.service;
 
 import com.example.product_service.dto.Criteria;
+import com.example.product_service.dto.ProductDTO;
 import com.example.product_service.dto.ProductDetailDTO;
 import com.example.product_service.dto.ProductDetailDTO.ProductStockDto;
 import com.example.product_service.dto.cache.CachedProduct;
-import com.example.product_service.entity.ProductStocks;
 import com.example.product_service.entity.Products;
-// import com.example.product_service.entity.ProductDocument;
-// import com.example.product_service.repository.ProductSearchRepository;
+import com.example.product_service.repository.ProductSearchRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,7 +30,7 @@ import org.springframework.stereotype.Service;
 public class ProductQueryService {
 
     private final ProductRepository productRepository;
-    // private final ProductSearchRepository productSearchRepository;
+    private final ProductSearchRepository productSearchRepository;
     //private final ModelMapper modelMapper;
     
     public ProductDetailDTO productToProductDto(Products product) {
@@ -111,17 +110,18 @@ public class ProductQueryService {
     }
     
     /* 검색 기능(List 출력) => elasticSearch */
-    // public List<ProductRequest> getProductsByName(String name) {
-    //     return productSearchRepository.findByName(name);
-    // }
+    public List<ProductDTO> getProductsByName(String name) {
+        return productSearchRepository.findByName(name);
+    }
 
     public List<Products> getAllProducts() {
         return productRepository.findAll();
         //return productSearchRepository.getAllProducts();
     }
 
-    public Page<Products> getFilteredProducts(Criteria criteria) {
+    public Page<ProductDTO> getFilteredProducts(Criteria criteria) {
         Pageable pageable = PageRequest.of(criteria.getPage() - 1, criteria.getPageSize());
-        return productRepository.findByNameContaining(criteria.getKeyword(), pageable);
+        // return productRepository.findByNameContaining(criteria.getKeyword(), pageable);
+        return productSearchRepository.findByName(criteria.getKeyword(), pageable);
     }
 }
