@@ -42,19 +42,9 @@ export const useProductStore = defineStore('product', {
     setCurrentProduct(product) {
       this.currentProduct = product;
     },
-    setFilteredProducts() { // TODO: 프론트에서 검색과 필터를 처리x -> 백엔드로 옮겨야함.
-      // this.filteredProducts = this.products.filter((product) => {
-      //   if(!product[this.searchType]) return false
-      //   return product[this.searchType].includes(this.filterKeyword);
-      // });
-    },     
-    async fetchProducts(category, page) { 
+    async fetchProducts(category, page) {
       if (!category) return;
       try {
-        // const url = "/product/api/query/products/all";
-        // const response = await axios.get(url);
-        // this.products = response.data;
-
         const url = "/product/api/query/products/filteredProducts";
         const data = { page: page, keyword: this.filterKeyword };
         const response = await axios.post(url, data);
@@ -68,9 +58,8 @@ export const useProductStore = defineStore('product', {
       this.initFilter();
     },    
     initFilter() { 
-      this.searchType = "title";
+      // this.searchType = "title";
       this.filterKeyword = "";
-      // this.filteredProducts = this.products;
     },
     /* 게시글 */
     async fetchProductById(productId) { 
@@ -88,12 +77,22 @@ export const useProductStore = defineStore('product', {
       }
       this.initFilter();
     }, 
-    async insertProduct(product) {
+    async insertProduct(product, images) {
       if (!product) return;
       // product.category = this.selectedCategory.id;
+      const formData = new FormData();      
+      formData.append("product", new Blob([JSON.stringify(product)], { type: "application/json" }));
+      if (images && images.length > 0) {
+        images.forEach((image, index) => {
+          if (index < 5) {
+            formData.append("images", image);
+          }
+        });
+      }
+
       try {
         const url = "/product/api/command/products";
-        const response = await axiosWhitAuth.post(url, product);
+        const response = await axiosWhitAuth.post(url, formData);
         console.log(response);
       } catch (error) {
         console.error("error in insertProduct: ", error);
