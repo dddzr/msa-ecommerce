@@ -31,7 +31,19 @@
           <label for="description">상세 설명</label>
           <textarea id="description" v-model="form.description" class="description-area"></textarea>
         </div>
-        
+        <div class="product-info-input-container">
+          <label for="representative_images">대표 이미지</label>
+          <input id="representative_images" type="file" @change="handleImageUpload" accept="image/*" multiple />
+        </div>
+        <div class="product-info-input-container">
+          <label for="image-preview">이미지 미리보기</label>
+          <div id="image-preview" class="image-preview-container">
+            <div v-for="(image, index) in previewImages" :key="index" class="image-preview">
+              <img :src="image.previewUrl" alt="대표 이미지 미리보기" />
+              <button @click="removeImage(index)">x</button>
+            </div>
+          </div>
+        </div>
         <!-- 색상 옵션 입력 -->
         <div class="color-container">
           <h2>색상 옵션</h2>
@@ -75,13 +87,14 @@
   import { useProductStore } from '@/stores/productStore';
   import mainNavbar from '@/components/mainNavbar.vue';
   import loadingSpinner from '@/components/loadingSpinner.vue';
-  import { checkAuthAndGoPage } from '@/composables/useNavigate';
+  import { useNavigate } from "@/composables/useNavigate";
   import '@/assets/styles/postDetailPage.css';
 
   const productStore = useProductStore();
   const uiStore = useUIStore();
   const route = useRoute();
-
+  const { checkAuthAndGoPage } = useNavigate();
+  
   const form = ref({
     category: '',
     name: '',
@@ -94,6 +107,8 @@
     sizes: [],
     productStocks: []
   });
+  const images = ref([]); // 실제 파일 저장
+  const previewImages = ref([]); // 미리보기 URL 저장
 
   onMounted(() => {
     productStore.setMode(route.query.mode);
@@ -101,6 +116,23 @@
       form.value = { ...productStore.currentProduct };
     }
   });
+
+  const handleImageUpload = (event) => {
+    const files = Array.from(event.target.files); // 파일 배열로 변환
+
+    files.forEach((file) => {
+      const previewUrl = URL.createObjectURL(file);
+      images.value.push(file);
+      previewImages.value.push({ file, previewUrl });
+    });
+  };
+
+  // 이미지 개별 삭제
+  const removeImage = (index) => {
+    URL.revokeObjectURL(previewImages.value[index].previewUrl);
+    images.value.splice(index, 1);
+    previewImages.value.splice(index, 1);
+  };
 
   const addColor = () => {
     form.value.colors.push('');
@@ -130,10 +162,10 @@
     uiStore.setIsLoading(true);
     try {
       if (productStore.mode === 'create') {
-        await productStore.insertProduct(form.value);
+        await productStore.insertProduct(form.value, images.value);
         alert('상품이 등록되었습니다.');
       } else if (productStore.mode === 'edit') {
-        await productStore.updateProduct(form.value);
+        await productStore.updateProduct(form.value, images.value);
         alert('상품이 수정되었습니다.');
       }
       checkAuthAndGoPage("MyShop");

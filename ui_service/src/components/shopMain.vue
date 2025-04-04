@@ -15,20 +15,19 @@
           v-model="productStore.filterKeyword"
           @keyup.enter="applyFilter()"
         />
-        <div class="filter-options">
+        <!-- <div class="filter-options">
           <select v-model="productStore.searchType">
             <option value="name">상품명</option>
             <option value="brand">브랜드</option>
-            <option value="description">설명</option>
           </select>
-        </div>
+        </div> -->
         <button @click="applyFilter()">검색</button>
       </div>
       
       <!-- 상품 목록 paginatedProducts-->
       <div class="product-list">
         <div v-for="product in productStore.filteredProducts" :key="product.productId" class="product-card" @click="goToViewProduct(product)">
-          <img :src="product.image" :alt="product.name" class="product-image" />
+          <img :src="product.imageUrl" :alt="product.name" class="product-image" />
           <div class="product-info">
             <h2>{{ product.name }}</h2>
             <p class="price">{{ product.price }}원</p>
@@ -93,7 +92,7 @@ const goToViewProduct = (product) => {
 };
 
 const applyFilter = () => {
-  productStore.setFilteredProducts();
+  productStore.setCurrentPage(1);
 };
 
 const changePage = (page) => {
