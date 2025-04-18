@@ -65,7 +65,7 @@ public class OrderQueryService {
                 OrderItemDetail orderItemDetail = objectMapper.convertValue(orderItem, OrderItemDetail.class);
 
                 CachedProduct cachedProduct = getCachedProduct(orderItem.getProductId());
-                OrderItemDetail.OrderedProductInfo orderedProductInfo = findOrderdProductInfo(cachedProduct, orderItem.getColorId(), orderItem.getSizeId());
+                OrderItemDetail.OrderedProductInfo orderedProductInfo = mapToOrderedProductInfo(cachedProduct, orderItem.getColorId(), orderItem.getSizeId());
                 orderedProductInfo.setPrice(orderItem.getPrice()); // 가격은 결제 당시 가격 표기
                 orderItemDetail.setOrderedProductInfo(orderedProductInfo);
                 orderItemDetails.add(orderItemDetail);
@@ -89,7 +89,7 @@ public class OrderQueryService {
     }
     
     // 캐시 데이터를 OrderedProductInfo로 변환
-    private OrderedProductInfo findOrderdProductInfo(CachedProduct cachedProduct, int colorId, int sizeId) {
+    private OrderedProductInfo mapToOrderedProductInfo(CachedProduct cachedProduct, int colorId, int sizeId) {
         // 색상 & 사이즈 정보 찾기
         String colorName = cachedProduct.getAvailableColors().get(colorId);
         String sizeName = cachedProduct.getAvailableSizes().get(sizeId);
@@ -111,7 +111,7 @@ public class OrderQueryService {
     // 판매자 주문 목록 조회
     public List<OrderSummary> getSellerOrders(OrderListRequest request) {
         // List<Orders> orders = orderRepository.findAll();
-        List<OrderSummary> orderSummaries = new ArrayList<>();        
+        List<OrderSummary> orderSummaries = new ArrayList<>();
         
         return orderSummaries;
     }
