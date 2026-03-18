@@ -26,9 +26,12 @@
 🔹개별 서비스 실행 방법  
 cd user_service # 각 서비스 디렉토리로 이동  
 gradlew bootRun # Spring Boot 서비스 실행  
+⭐ 26.03 인프라 Docker 파일 추가함.  
 
-🔹서브트리 업데이트 방법 (수동)  
-git subtree pull --prefix=user_service https://github.com/dddzr/user_service.git main --squash
+🔹서브트리 업데이트 내보내기  
+git subtree pull --prefix=경로 저장소URL 브랜치 main --squash  
+🔹서브트리 업데이트 가져오기  
+git subtree push --prefix=경로 저장소URL 브랜치  
 
 🔹프로젝트 클론  
 git clone --recursive https://github.com/dddzr/msa-ecommerce.git  

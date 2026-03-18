@@ -1,0 +1,95 @@
+version: '3'
+
+services:
+  # 로컬 DB 사용 
+  # mariadb:
+  #   image: mariadb:10.6
+  #   container_name: common-mariadb
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root
+  #   ports:
+  #     - "3307:3306"
+  #   volumes:
+  #     - mariadb_data:/var/lib/mysql
+
+  redis:
+    image: redis
+    container_name: common-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  elasticsearch:
+    image: elasticsearch:8.12.0
+    container_name: common-es
+    profiles: ["optional"]
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  # =====================
+  # 자동 시작 MSA
+  # =====================
+  eureka-server:
+    build: ./eureka
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 5s
+      retries: 10
+
+  api-gateway:
+    build: ./gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      # mariadb:
+      #   condition: service_started
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+    #   interval: 5s
+    #   retries: 10
+
+  # =====================
+  # 다른 서비스 (수동 실행)
+  # =====================
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    profiles: ["optional"]
+    ports:
+      - "8085:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+  product-service:
+    build: ./product-service
+    container_name: product-service
+    profiles: ["optional"]
+    ports:
+      - "8083:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+
+
+volumes:
+  # mariadb_data:
+  redis_data:
+  es_data:
