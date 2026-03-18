@@ -1,18 +1,22 @@
 package com.example.order_service.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.order_service.client.ProductClient;
-import com.example.order_service.dto.cache.CachedProduct;
 import com.example.order_service.dto.request.OrderListRequest;
 import com.example.order_service.dto.response.OrderDetail;
 import com.example.order_service.dto.response.OrderItemDetail;
 import com.example.order_service.dto.response.OrderItemDetail.OrderedProductInfo;
 import com.example.order_service.dto.response.OrderSummary;
+import com.example.order_service.dto.response.ProductResponse;
 import com.example.order_service.entity.OrderItems;
 import com.example.order_service.entity.Orders;
 import com.example.order_service.repository.OrderRepository;
@@ -64,8 +68,8 @@ public class OrderQueryService {
             for(OrderItems orderItem: order.getOrderItems()){
                 OrderItemDetail orderItemDetail = objectMapper.convertValue(orderItem, OrderItemDetail.class);
 
-                CachedProduct cachedProduct = getCachedProduct(orderItem.getProductId());
-                OrderItemDetail.OrderedProductInfo orderedProductInfo = mapToOrderedProductInfo(cachedProduct, orderItem.getColorId(), orderItem.getSizeId());
+                ProductResponse productResponse = getProduct(orderItem.getProductId());
+                OrderItemDetail.OrderedProductInfo orderedProductInfo = mapToOrderedProductInfo(productResponse, orderItem.getColorId(), orderItem.getSizeId());
                 orderedProductInfo.setPrice(orderItem.getPrice()); // 가격은 결제 당시 가격 표기
                 orderItemDetail.setOrderedProductInfo(orderedProductInfo);
                 orderItemDetails.add(orderItemDetail);
@@ -77,36 +81,31 @@ public class OrderQueryService {
     }
 
     // 상품 서비스 API 호출 (FeignClient 사용)
-    private CachedProduct getCachedProduct(int productId) {
-        CachedProduct cachedProduct= new CachedProduct();
-        // 1. 캐시에서 상품 정보 조회
-        // cachedProduct = cacheService.getOrderedProductInfo(productId);
-        // 2. 없으면 Product 서비스 API에 요청 (product 서비스에서 캐시에 저장.)
-        // if(cachedProduct == null) {
-            cachedProduct = productClient.getProductForCache(productId);
-        // }
-        return cachedProduct;
+    private ProductResponse getProduct(int productId) {
+        ProductResponse productResponse = new ProductResponse();
+        // product-service에서 생성한 캐시는 order-service에서 직접 조회x. 무조건 API 요청.
+        productResponse = productClient.getProduct(productId);
+        return productResponse;
     }
     
     // 캐시 데이터를 OrderedProductInfo로 변환
-    private OrderedProductInfo mapToOrderedProductInfo(CachedProduct cachedProduct, int colorId, int sizeId) {
+    private OrderedProductInfo mapToOrderedProductInfo(ProductResponse productResponse, int colorId, int sizeId) {
         // 색상 & 사이즈 정보 찾기
-        String colorName = cachedProduct.getAvailableColors().get(colorId);
-        String sizeName = cachedProduct.getAvailableSizes().get(sizeId);
+        String colorName = productResponse.getAvailableColors().get(colorId);
+        String sizeName = productResponse.getAvailableSizes().get(sizeId);
 
         // OrderedProductInfo 생성 및 반환
         OrderedProductInfo orderedProductInfo = new OrderedProductInfo();
-        orderedProductInfo.setProductId(cachedProduct.getProductId());
-        orderedProductInfo.setProductName(cachedProduct.getProductName());
+        orderedProductInfo.setProductId(productResponse.getProductId());
+        orderedProductInfo.setProductName(productResponse.getProductName());
         orderedProductInfo.setColorId(colorId);
         orderedProductInfo.setColorName(colorName);
         orderedProductInfo.setSizeId(sizeId);
         orderedProductInfo.setSizeName(sizeName);
-        // orderedProductInfo.setPrice(cachedProduct.getPrice());
+        // orderedProductInfo.setPrice(productResponse.getPrice());
 
         return orderedProductInfo;
     }
-
 
     // 판매자 주문 목록 조회
     public List<OrderSummary> getSellerOrders(OrderListRequest request) {
@@ -114,5 +113,13 @@ public class OrderQueryService {
         List<OrderSummary> orderSummaries = new ArrayList<>();
         
         return orderSummaries;
+    }
+
+    // 인기 상품 조회
+    public List<Integer> getTopSellingProductIds(LocalDateTime startDate, LocalDateTime endDate, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Integer> popularItems = orderRepository.findTopSellingProducts(startDate, endDate, pageable);
+        
+        return popularItems;
     }
 }
