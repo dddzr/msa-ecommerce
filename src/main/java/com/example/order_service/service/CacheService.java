@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import com.example.order_service.dto.cache.CachedDelivery;
 import com.example.order_service.dto.cache.CachedPayment;
-import com.example.order_service.dto.cache.CachedProduct;
 import com.example.order_service.dto.response.OrderDetail;
 import com.example.order_service.dto.response.OrderItemDetail;
 import com.example.order_service.dto.response.OrderSummary;
@@ -14,7 +13,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class CacheService {
+// TODO: 캐시에 prefix 추가 하기. 헷갈린다..
+/*
+{service}:{domain}:{id}
 
+- 예시
+product-service:product:123
+product-service:product:list:category:10
+product-service:product:detail:123
+
+- 리스트/검색 캐시
+product-service:product:list:category:10
+product-service:product:search:keyword:iphone
+
+- 버전 관리 (캐시 무효화 전략)
+product-service:v1:product:123
+*/
     // @Autowired
     // private RedisTemplate<String, Object> redisTemplate;
     // @Autowired
@@ -63,21 +77,6 @@ public class CacheService {
     //     orderDetail.setPayment(paymentDetail);
 
     //     return orderDetail;
-    // }
-
-    // public OrderItemDetail.OrderedProductInfo getOrderedProductInfo(int productId) {
-    //     String productKey = "product:" + productId;
-
-    //     OrderItemDetail.OrderedProductInfo orderedProductInfo = new OrderItemDetail.OrderedProductInfo();
-    //     CachedProduct product = (CachedProduct) redisTemplate.opsForValue().get(productKey);
-    //     if (product != null) {
-    //         orderedProductInfo = objectMapper.convertValue(product, OrderItemDetail.OrderedProductInfo.class);
-    //     }else {
-    //         // 캐시가 없으면 DB에서 조회
-    //         // 주문 데이터 조회 및 캐시 저장
-    //     }
-
-    //     return orderedProductInfo;
     // }
 
     // // 목록 하나씩 추가 (주문이 생성될 때 추가, 배송/결제 시스템에 의해 수정된다.)
