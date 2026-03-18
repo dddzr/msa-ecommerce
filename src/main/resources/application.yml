@@ -1,0 +1,59 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true # Eureka 서비스 등록을 통한 동적 라우팅 활성화
+  #     routes:
+  #       - id: user
+  #         uri: lb://user
+  #         predicates:
+  #           - Path=/user/**
+  #         filters:
+  #           - StripPrefix=1
+  #       - id: product
+  #         uri: lb://product
+  #         predicates:
+  #           - Path=/product/**
+  #       - id: order
+  #         uri: lb://order
+  #         predicates:
+  #           - Path=/order/**
+
+eureka:
+  client:
+    register-with-eureka: true # eureka server registry에 현재 애플리케이션 자신의 정보를 등록할지 (다른 서비스들이 name으로 접근가능)
+    fetch-registry: true # registry에 있는 정보(등록된 서비스 목록)들을 가져올지 여부
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        #include: info # info 엔드포인트만 활성화
+        # 또는 모든 엔드포인트 활성화 (운영 환경에서는 보안상 권장하지 않음)
+        include: '*'
+
+security:
+  public-paths:
+    - /user/api/auth/**
+    - /user/api/users/**
+    - /product/api/query/products/**
+  admin-paths:
+    - /user/api/admin/**
+    - /product/api/command/products/**
+    - /order/api/query/orders/admin/**
+    - /order/api/command/orders/admin/**
+  user-paths:
+    - /order/**
+
+logging:
+  level:
+    # root: DEBUG
+    org.springframework.security: DEBUG

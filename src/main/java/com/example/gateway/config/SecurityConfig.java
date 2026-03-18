@@ -26,9 +26,11 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
     
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final SecurityPathProperties securityPathProperties;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, SecurityPathProperties securityPathProperties) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.securityPathProperties = securityPathProperties;
     }
 
     @Bean
@@ -39,15 +41,36 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         http.addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION);
-        http.authorizeExchange(exchanges -> exchanges
-            .pathMatchers("/user/api/auth/**", "/user/api/users/**").permitAll()
-            .pathMatchers("/user/api/admin/**").hasRole("ADMIN")
-            .pathMatchers("/product/api/query/products/**").permitAll()
-            .pathMatchers("/product/api/command/products/**").hasRole("ADMIN")
-            .pathMatchers("/order/api/orders/admin/**").hasRole("ADMIN")
-            .pathMatchers("/order/**").hasRole("USER")
-            .anyExchange().authenticated() // 기본적으로 모든 요청 인증, 어떤 권한이라도 있으면 통과
-            );
+        // http.authorizeExchange(exchanges -> exchanges
+        //     .pathMatchers("/user/api/auth/**", "/user/api/users/**").permitAll()
+        //     .pathMatchers("/user/api/admin/**").hasRole("ADMIN")
+        //     .pathMatchers("/product/api/query/products/**").permitAll()
+        //     .pathMatchers("/product/api/command/products/**").hasRole("ADMIN")
+        //     .pathMatchers("/order/api/query/orders/admin/**").hasRole("ADMIN")
+        //     .pathMatchers("/order/api/command/orders/admin/**").hasRole("ADMIN")
+        //     .pathMatchers("/order/**").hasRole("USER")
+        //     .anyExchange().authenticated() // 기본적으로 모든 요청 인증, 어떤 권한이라도 있으면 통과
+        //     );
+
+            List<String> publicPaths = securityPathProperties.getPublicPaths();
+            List<String> adminPaths = securityPathProperties.getAdminPaths();
+            List<String> userPaths = securityPathProperties.getUserPaths();
+
+            http.authorizeExchange(exchanges  -> {
+                // 동적 경로 허용
+                for (String path : publicPaths) {
+                    exchanges.pathMatchers(path).permitAll();
+                }
+                for (String path : adminPaths) {
+                    exchanges.pathMatchers(path).hasRole("ADMIN");
+                }
+                for (String path : userPaths) {
+                    exchanges.pathMatchers(path).hasRole("USER");
+                }
+                // 나머지 경로는 인증 필요
+                exchanges.anyExchange().authenticated();
+            });
+
         http.exceptionHandling(exceptionHandling -> exceptionHandling
                 .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED)) // 401 응답 설정, 이거 없으면 authenticated걸렸을 때 로그인 팝업이 뜬다.
             );
