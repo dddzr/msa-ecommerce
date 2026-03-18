@@ -3,7 +3,8 @@ package com.example.product_service.controller;
 import com.example.product_service.dto.Criteria;
 import com.example.product_service.dto.ProductDetailDTO;
 import com.example.product_service.dto.ProductDTO;
-import com.example.product_service.dto.cache.CachedProduct;
+import com.example.product_service.dto.ProductSearchDTO;
+import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.entity.Products;
 import com.example.product_service.service.ProductQueryService;
 
@@ -28,11 +29,22 @@ public class ProductQueryController {
         return product != null ? ResponseEntity.ok(product) : ResponseEntity.notFound().build();
     }
 
-    // 조회 (캐시 DTO)
-    @GetMapping("/productForCache/{id}")
-    public ResponseEntity<CachedProduct> getProductForCache(@PathVariable("id") int id) {
-        CachedProduct product = productQueryService.getProductForCache(id);
+    // 단건 조회 (캐시 DTO)
+    @GetMapping("/product/{id}")
+    public ResponseEntity<ProductResponse> getProduct(@PathVariable("id") int id) {
+        ProductResponse product = productQueryService.getProduct(id);
         return product != null ? ResponseEntity.ok(product) : ResponseEntity.notFound().build();
+    }
+
+    // 배치 조회 - 아직 안 씀
+    @GetMapping("/productList/{ids}")
+    public ResponseEntity<List<ProductResponse>> getProductList(@RequestParam("ids") List<Integer> ids) {
+        // List<CachedProduct> products = ids.stream()
+        //         .map(productQueryService::getProductForCache)
+        //         .filter(p -> p != null) // 없는 상품 제외
+        //         .collect(Collectors.toList());
+        List<ProductResponse> products = productQueryService.getProductList(ids);
+        return ResponseEntity.ok(products);
     }
 
     // @GetMapping("/search/{name}")
@@ -50,8 +62,8 @@ public class ProductQueryController {
 
     // 필터링된 상품 조회 (페이징 적용)
     @PostMapping("/filteredProducts")
-    public ResponseEntity<Page<ProductDTO>> getFilteredProducts(@RequestBody Criteria criteria) {
-        Page<ProductDTO> products = productQueryService.getFilteredProducts(criteria);
+    public ResponseEntity<Page<ProductSearchDTO>> getFilteredProducts(@RequestBody Criteria criteria) {
+        Page<ProductSearchDTO> products = productQueryService.getFilteredProducts(criteria);
         return ResponseEntity.ok(products);
         //return products.hasContent() ? ResponseEntity.ok(products) : ResponseEntity.noContent().build();
     }

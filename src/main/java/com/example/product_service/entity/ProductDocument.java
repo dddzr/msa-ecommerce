@@ -17,6 +17,12 @@ public class ProductDocument {
     
     @Id
     private int productId; // 상품 ID
+    
+    // @Id
+    // private String id; // Elasticsearch 고유 ID
+
+    // @Field(type = FieldType.Keyword)
+    // private int productId; // 상품 ID
 
     @Field(type = FieldType.Text)
     private String name; // 상품명
