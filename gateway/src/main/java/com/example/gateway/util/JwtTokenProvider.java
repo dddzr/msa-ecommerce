@@ -3,6 +3,7 @@ package com.example.gateway.util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import io.jsonwebtoken.Claims;
@@ -44,7 +45,7 @@ public class JwtTokenProvider {
     @SuppressWarnings("deprecation")
     public String getUsernameFromToken(String token) {
         return Jwts.parserBuilder()
-                   .setSigningKey(SECRET_KEY.getBytes())
+                   .setSigningKey(SECRET_KEY.getBytes(StandardCharsets.UTF_8))
                    .build()
                    .parseClaimsJws(token)
                    .getBody()  // 전체 claims 반환
@@ -63,7 +64,7 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY.getBytes())
+                .setSigningKey(SECRET_KEY.getBytes(StandardCharsets.UTF_8))
                 .build()
                 .parseClaimsJws(token); // JWT의 형식(Header.Payload.Signature 형태인지) & 서명 & 만료 검증       
 
