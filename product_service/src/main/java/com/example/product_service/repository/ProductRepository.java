@@ -25,7 +25,16 @@ public interface ProductRepository extends JpaRepository<Products, Integer> {
            "LEFT JOIN p.sizes s " +
            "LEFT JOIN p.stocks ps ON ps.color.colorId = c.colorId AND ps.size.sizeId = s.sizeId " +
            "WHERE p.productId = :id")
-    List<Object[]> findProductForCache(@Param("id") int id);
+    List<Object[]> findProduct(@Param("id") int id);
+
+    @Query("SELECT p.productId, p.name, p.price, " +
+       "c.colorId, c.colorName, s.sizeId, s.sizeName " +
+       "FROM Products p " +
+       "LEFT JOIN p.colors c " +
+       "LEFT JOIN p.sizes s " +
+       "WHERE p.productId IN :ids")
+    List<Object[]> findProductList(@Param("ids") List<Integer> ids);
+
 
 
     /* pageable은 

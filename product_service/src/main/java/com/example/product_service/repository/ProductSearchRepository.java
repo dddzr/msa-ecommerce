@@ -1,6 +1,7 @@
 package com.example.product_service.repository;
 
 import com.example.product_service.dto.ProductDTO;
+import com.example.product_service.dto.ProductSearchDTO;
 import com.example.product_service.entity.ProductDocument;
 
 import java.util.List;
@@ -21,6 +22,6 @@ public interface ProductSearchRepository extends ElasticsearchRepository<Product
     Optional<ProductDocument> findById(int id);
 
     @Query("{\"bool\": {\"should\": [{\"match\": {\"name\": \"?0\"}}, {\"match_all\": {}}]}}")
-    Page<ProductDTO> findByNameOrAll(String keyword, Pageable pageable);
+    Page<ProductSearchDTO> findByNameOrAll(String keyword, Pageable pageable);
     
 }

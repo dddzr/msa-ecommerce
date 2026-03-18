@@ -40,6 +40,7 @@ public class ProductCommandService {
     private final ProductColorsRepository productColorsRepository;
     private final ProductStocksRepository productStocksRepository;
     private final ProductSearchRepository productSearchRepository;
+    private final CacheService cacheService;
     private final ModelMapper modelMapper;
 
     public Products productDtoToProduct(ProductDetailDTO productDto) {
@@ -200,10 +201,8 @@ public class ProductCommandService {
         ProductDocument productDocument = productToProductDocument(products);
         productSearchRepository.save(productDocument);
 
-        // TODO: Redis 캐싱
-        // String productKey = "product:" + event.getProductId();
-        // redisTemplate.opsForValue().set(productKey, products, Duration.ofDays(30));
-
+        // Redis 캐싱
+        cacheService.saveProduct(products.getProductId(), products);
         
         products.setSizes(savedSizes);
         products.setColors(savedColors);
@@ -226,9 +225,8 @@ public class ProductCommandService {
         products = productRepository.save(products);
         // productSearchRepository.save(productToProductDocument(products));
 
-        // TODO: Redis 캐싱
-        // String productKey = "product:" + event.getProductId();
-        // redisTemplate.opsForValue().set(productKey, products, Duration.ofDays(30));
+        // Redis 캐싱
+        cacheService.saveProduct(products.getProductId(), products);
 
         return productToProductDetailDTO(products);
     }
