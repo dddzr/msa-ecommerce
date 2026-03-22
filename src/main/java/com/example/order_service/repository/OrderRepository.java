@@ -1,7 +1,6 @@
 package com.example.order_service.repository;
 
 import com.example.order_service.dto.request.OrderListRequest;
-import com.example.order_service.entity.OrderItems;
 import com.example.order_service.entity.Orders;
 
 import jakarta.persistence.criteria.Predicate;
@@ -11,7 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -50,6 +51,10 @@ public interface OrderRepository extends JpaRepository<Orders, Integer>, JpaSpec
 
     default List<Orders> findOrdersByRequest(OrderListRequest request) {
         return findAll(filterOrders(request));
+    }
+
+    default Page<Orders> findOrdersByRequest(OrderListRequest request, @NonNull Pageable pageable) {
+        return findAll(filterOrders(request), pageable);
     }
 
     // 1개월 이내 판매량 상위 10개 상품 조회
