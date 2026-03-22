@@ -3,117 +3,122 @@ package com.example.product_service.service;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import com.example.product_service.config.AppConfig;
+
 import com.example.product_service.dto.ProductDetailDTO;
-import com.example.product_service.dto.ProductDetailDTO.ProductStockDto;
-import com.example.product_service.entity.ProductColors;
+import com.example.product_service.dto.ProductDetailDTO.ProductOptionDto;
+import com.example.product_service.dto.ProductDetailDTO.VariantStockDto;
+import com.example.product_service.dto.VariantStockMapper;
 import com.example.product_service.entity.ProductDocument;
-import com.example.product_service.entity.ProductSizes;
-import com.example.product_service.entity.ProductStocks;
+import com.example.product_service.entity.ProductOption;
+import com.example.product_service.entity.ProductOptionValue;
+import com.example.product_service.entity.ProductVariant;
+import com.example.product_service.entity.ProductVariantOptionValue;
 import com.example.product_service.entity.Products;
-import com.example.product_service.repository.ProductColorsRepository;
 import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.repository.ProductSearchRepository;
-import com.example.product_service.repository.ProductSizesRepository;
-import com.example.product_service.repository.ProductStocksRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
-
-/* 삽삭갱 명령 */
+/**
+ * 상품 CUD(생성·수정·삭제) 전담 서비스.
+ * <p>
+ * 옵션 차원은 {@link ProductOption#optionKey} 로만 구분하며, COLOR/SIZE 등 이름은 요청 본문에서 정의합니다.
+ */
 @Service
 @RequiredArgsConstructor
 public class ProductCommandService {
 
     private final ProductRepository productRepository;
-    private final ProductSizesRepository productSizesRepository;
-    private final ProductColorsRepository productColorsRepository;
-    private final ProductStocksRepository productStocksRepository;
     private final ProductSearchRepository productSearchRepository;
     private final CacheService cacheService;
     private final ModelMapper modelMapper;
 
+    /**
+     * 등록용: DTO → 엔티티 기본 필드만 매핑.
+     */
     public Products productDtoToProduct(ProductDetailDTO productDto) {
-        ModelMapper modelMapper = new ModelMapper();
-        modelMapper.typeMap(ProductDetailDTO.class, Products.class).addMappings(mapper -> {
-            mapper.skip(Products::setStocks);  // productStocks 필드 제외
-            mapper.skip(Products::setSizes);          // sizes 필드 제외
-            mapper.skip(Products::setColors);         // colors 필드 제외
+        ModelMapper mm = new ModelMapper();
+        mm.typeMap(ProductDetailDTO.class, Products.class).addMappings(mapper -> {
+            mapper.skip(Products::setOptions);
+            mapper.skip(Products::setVariants);
         });
-        return modelMapper.map(productDto, Products.class);
+        return mm.map(productDto, Products.class);
     }
 
+    /**
+     * 조회/응답용: 엔티티 → 상세 DTO (옵션 정의·SKU 행은 직접 조립).
+     */
     public ProductDetailDTO productToProductDetailDTO(Products product) {
-        ModelMapper modelMapper = new ModelMapper();
-        
-        modelMapper.typeMap(Products.class, ProductDetailDTO.class).addMappings(mapper -> {
+        ModelMapper mm = new ModelMapper();
+        mm.typeMap(Products.class, ProductDetailDTO.class).addMappings(mapper -> {
             mapper.skip(ProductDetailDTO::setProductStocks);
             mapper.skip(ProductDetailDTO::setDiscountRate);
             mapper.skip(ProductDetailDTO::setDiscountPrice);
+            mapper.skip(ProductDetailDTO::setOptions);
         });
-        // 기본 필드 매핑
-        ProductDetailDTO productDto = modelMapper.map(product, ProductDetailDTO.class);
+        ProductDetailDTO dto = mm.map(product, ProductDetailDTO.class);
+        dto.setOptions(buildOptionDtos(product));
+        dto.setProductStocks(buildVariantStockRows(product));
+        return dto;
+    }
 
-        // 추가 매핑 (사이즈, 색상, 재고)
-        // productDto.setSizes(
-        //     product.getSizes().stream()
-        //         .map(ProductSizes::getSizeName)
-        //         .collect(Collectors.toList())
-        // );
+    private List<ProductOptionDto> buildOptionDtos(Products product) {
+        if (product.getOptions() == null) {
+            return List.of();
+        }
+        return product.getOptions().stream()
+                .sorted(Comparator.comparingInt(ProductOption::getDisplayOrder))
+                .map(o -> new ProductOptionDto(
+                        o.getOptionKey(),
+                        o.getDisplayName(),
+                        o.getDisplayOrder(),
+                        o.getValues() == null
+                                ? List.of()
+                                : o.getValues().stream()
+                                        .sorted(Comparator.comparingInt(ProductOptionValue::getSortOrder))
+                                        .map(ProductOptionValue::getValueLabel)
+                                        .collect(Collectors.toList())))
+                .collect(Collectors.toList());
+    }
 
-        // productDto.setColors(
-        //     product.getColors().stream()
-        //         .map(ProductColors::getColorName)
-        //         .collect(Collectors.toList())
-        // );
-
-        // productDto.setProductStocks(
-        //     product.getStocks().stream()
-        //         .map(stock -> new ProductDetailDTO.ProductStockDto(
-        //             stock.getSize().getSizeId(), stock.getSize().getSizeName(), stock.getColor().getColorId(), stock.getColor().getColorName(), stock.getStockQuantity()
-        //             ))
-        //         .collect(Collectors.toList())
-        // );
-
-        return productDto;
+    private List<VariantStockDto> buildVariantStockRows(Products product) {
+        if (product.getVariants() == null) {
+            return List.of();
+        }
+        return product.getVariants().stream()
+                .map(v -> VariantStockMapper.toRow(v, product))
+                .collect(Collectors.toList());
     }
 
     public ProductDocument productToProductDocument(Products products) {
         return modelMapper.map(products, ProductDocument.class);
     }
 
-    String handleFiles(List<MultipartFile> images){
+    /**
+     * 업로드된 이미지들을 순서대로 저장하고, DB에 넣을 URL 문자열을 만든다.
+     *
+     * @return 세미콜론(;)으로 이어 붙인 파일명(또는 경로) 조각들. 선행 {@code ';'} 포함.
+     */
+    String handleFiles(List<MultipartFile> images) {
         int fileSeq = 0;
-		// 유지
-		// List<FileDTO> existingFiles = request.getExistingFiles();
-		// for( int i = 0; i < existingFiles.size() ; i++ ) {
-		// 	FileDTO file = existingFiles.get(i);
-		// 	fileService.copyFileByTemp(file, prodcut_id, fileSeq);
-		// 	fileSeq++;
-		// }
-		
-		// 삭제
-		
-		// 새로 등록
         String imageUrl = "";
         if (images != null) {
-            for ( int i = 0 ; i < images.size() ; i++ ) {
-            	MultipartFile file = images.get(i);
+            for (int i = 0; i < images.size(); i++) {
+                MultipartFile file = images.get(i);
                 if (!file.isEmpty()) {
-                	//FileDTO savedFile = saveFileAtServer(product.getProductId(), fileSeq, file);
-                	String savedUrl = saveFileAtServer(fileSeq, file);
-                	// fileService.insertFiles(savedFile);
-                	fileSeq++;
+                    String savedUrl = saveFileAtServer(fileSeq, file);
+                    fileSeq++;
                     imageUrl += ';' + savedUrl;
                 }
             }
@@ -121,34 +126,24 @@ public class ProductCommandService {
         return imageUrl;
     }
 
+    /** 로컬 디렉터리 {@code C:/upload} 에 저장 후 저장 파일명 반환. */
     String saveFileAtServer(int fileSeq, MultipartFile file) {
-        String uploadDir = "C:/upload"; // 실제 환경에 맞는 경로로 변경
+        String uploadDir = "C:/upload";
         String originalFilename = file.getOriginalFilename();
-        
-        //String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmssSSS").format(new Date());
         String storedFilename = UUID.randomUUID().toString() + "_" + originalFilename;
         File destFile = new File(uploadDir + "/" + storedFilename);
         try {
             file.transferTo(destFile);
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (IllegalStateException | IOException e) {
             e.printStackTrace();
         }
-
-        // 2. DB 저장용 정보 리턴
-        // FileDTO fileDTO = new FileDTO();
-        // fileDTO.setSno(sno);
-        // fileDTO.setFileId(FileSno);
-        // fileDTO.setFileNm(originalFilename);
-        // fileDTO.setFileSaveNm(storedFilename);
-        // fileDTO.setFileExtn(extension); //file.getContentType()
-        // fileDTO.setFileSize(String.valueOf(file.getSize()));
-        // fileDTO.setUseYn("Y");
-
         return storedFilename;
     }
 
+    /**
+     * 상품 신규 등록: 이미지 → 상품 기본 저장 → 요청의 옵션 정의별 {@link ProductOption} 생성 →
+     * 재고 행마다 SKU 조합 생성. SKU 코드는 {@code P{productId}-{valueId}-...} (displayOrder 순).
+     */
     @Transactional
     public ProductDetailDTO insertProduct(ProductDetailDTO productRequest, List<MultipartFile> images) {
         productRequest.setImageUrl(handleFiles(images));
@@ -156,87 +151,123 @@ public class ProductCommandService {
         Products products = productDtoToProduct(productRequest);
         products = productRepository.save(products);
 
-        productSizesRepository.deleteExistingSizes(products.getProductId());
-        List<ProductSizes> savedSizes = new ArrayList<>();
-        for (String size : productRequest.getSizes()) {
-            ProductSizes sizeEntity = new ProductSizes();
-            sizeEntity.setProduct(products);
-            sizeEntity.setSizeName(size);
-            sizeEntity = productSizesRepository.save(sizeEntity);
-            savedSizes.add(sizeEntity);
-        }
+        List<ProductOptionDto> optionDefs = productRequest.getOptions() != null
+                ? productRequest.getOptions()
+                : List.of();
+        List<ProductOptionDto> sortedDefs = optionDefs.stream()
+                .sorted(Comparator.comparingInt(ProductOptionDto::getDisplayOrder))
+                .collect(Collectors.toList());
 
-        productColorsRepository.deleteExistingColors(products.getProductId());
-        List<ProductColors> savedColors = new ArrayList<>();
-        for (String color : productRequest.getColors()) {
-            ProductColors colorEntity = new ProductColors();
-            colorEntity.setProduct(products);
-            colorEntity.setColorName(color);
-            colorEntity = productColorsRepository.save(colorEntity);
-            savedColors.add(colorEntity);
-        }
-
-        // 재고 정보 저장
-        List<ProductStocks> savedStocks = new ArrayList<>();
-        for (ProductSizes size : savedSizes) {
-            for (ProductColors color : savedColors) {
-                ProductStocks stock = new ProductStocks();
-                stock.setProduct(products);
-                stock.setSize(size);
-                stock.setColor(color);
-
-                int stockQuantity = productRequest.getProductStocks().stream()
-                .filter(stockDto -> stockDto.getSizeName().equals(size.getSizeName()) &&
-                                    stockDto.getColorName().equals(color.getColorName()))
-                .map(ProductStockDto::getStockQuantity)
-                .findFirst()
-                .orElse(0);
-
-                stock.setStockQuantity(stockQuantity);
-                savedStocks.add(productStocksRepository.save(stock));
+        for (ProductOptionDto def : sortedDefs) {
+            ProductOption opt = new ProductOption();
+            opt.setProduct(products);
+            opt.setOptionKey(def.getOptionKey());
+            opt.setDisplayName(def.getDisplayName() != null ? def.getDisplayName() : def.getOptionKey());
+            opt.setDisplayOrder(def.getDisplayOrder());
+            List<String> labels = def.getValueLabels() != null ? def.getValueLabels() : List.of();
+            for (int i = 0; i < labels.size(); i++) {
+                ProductOptionValue v = new ProductOptionValue();
+                v.setOption(opt);
+                v.setValueLabel(labels.get(i));
+                v.setSortOrder(i);
+                opt.getValues().add(v);
             }
+            products.getOptions().add(opt);
         }
 
-        // TODO: elasticsearch에 등록
+        products = productRepository.save(products);
+
+        List<ProductOption> orderedOptions = products.getOptions().stream()
+                .sorted(Comparator.comparingInt(ProductOption::getDisplayOrder))
+                .collect(Collectors.toList());
+
+        List<VariantStockDto> stockRows = productRequest.getProductStocks() != null
+                ? productRequest.getProductStocks()
+                : List.of();
+
+        for (VariantStockDto row : stockRows) {
+            Map<String, String> selections = row.getSelections();
+            ProductVariant variant = new ProductVariant();
+            variant.setProduct(products);
+            variant.setStockQuantity(row.getStockQuantity());
+            variant.setPriceAdjustment(BigDecimal.ZERO);
+
+            List<Integer> skuIds = new ArrayList<>();
+            boolean ok = true;
+            for (ProductOption opt : orderedOptions) {
+                String key = opt.getOptionKey();
+                String label = selections != null ? selections.get(key) : null;
+                ProductOptionValue val = findValueByLabel(opt, label);
+                if (val == null) {
+                    ok = false;
+                    break;
+                }
+                skuIds.add(val.getValueId());
+                ProductVariantOptionValue link = new ProductVariantOptionValue();
+                link.setVariant(variant);
+                link.setOptionValue(val);
+                variant.getOptionSelections().add(link);
+            }
+            if (!ok) {
+                continue;
+            }
+            variant.setSkuCode(buildSkuCode(products.getProductId(), skuIds));
+            products.getVariants().add(variant);
+        }
+
+        products = productRepository.save(products);
+
         ProductDocument productDocument = productToProductDocument(products);
         productSearchRepository.save(productDocument);
+        cacheService.evictCachedProduct(products.getProductId());
 
-        // Redis 캐싱
-        cacheService.saveProduct(products.getProductId(), products);
-        
-        products.setSizes(savedSizes);
-        products.setColors(savedColors);
-        products.setStocks(savedStocks);
-
-        return productToProductDetailDTO(products);
+        Products reloaded = productRepository.findProductWithDetails(products.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found after save"));
+        return productToProductDetailDTO(reloaded);
     }
 
+    private static String buildSkuCode(int productId, List<Integer> valueIdsInOptionOrder) {
+        StringBuilder sb = new StringBuilder("P").append(productId);
+        for (int vid : valueIdsInOptionOrder) {
+            sb.append('-').append(vid);
+        }
+        return sb.toString();
+    }
+
+    private static ProductOptionValue findValueByLabel(ProductOption option, String label) {
+        if (option.getValues() == null || label == null) {
+            return null;
+        }
+        return option.getValues().stream()
+                .filter(v -> label.equals(v.getValueLabel()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * 상품 일부 필드 수정(이름·가격·설명). 옵션/SKU 구조 변경은 미구현.
+     */
     public ProductDetailDTO updateProduct(int id, ProductDetailDTO productDto) {
-        // 기존 상품 조회
         Products products = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // ProductDto -> Product Model로 업데이트
         products.setName(productDto.getName());
         products.setPrice(productDto.getPrice());
         products.setDescription(productDto.getDescription());
 
-        // 상품 수정 로직
         products = productRepository.save(products);
-        // productSearchRepository.save(productToProductDocument(products));
+        cacheService.evictCachedProduct(products.getProductId());
 
-        // Redis 캐싱
-        cacheService.saveProduct(products.getProductId(), products);
-
-        return productToProductDetailDTO(products);
+        Products reloaded = productRepository.findProductWithDetails(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        return productToProductDetailDTO(reloaded);
     }
 
     public void deleteProduct(int id) {
-        // 상품 삭제 로직
         Products products = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-        
+
         productRepository.delete(products);
-        // productSearchRepository.delete(productToProductDocument(products));
+        cacheService.evictCachedProduct(id);
     }
 }

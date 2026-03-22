@@ -1,5 +1,6 @@
 package com.example.product_service.repository;
 import com.example.product_service.dto.ProductDTO;
+import com.example.product_service.dto.cache.ProductCacheOptionRow;
 import com.example.product_service.entity.Products;
 
 import java.util.List;
@@ -15,33 +16,39 @@ public interface ProductRepository extends JpaRepository<Products, Integer> {
     
     Optional<Products> findById(int id);
 
-    @Query("SELECT p FROM Products p LEFT JOIN FETCH p.stocks s LEFT JOIN FETCH s.color c LEFT JOIN FETCH s.size sz WHERE p.productId = :id")
+    @Query("SELECT DISTINCT p FROM Products p "
+            + "LEFT JOIN FETCH p.options o "
+            + "LEFT JOIN FETCH o.values "
+            + "LEFT JOIN FETCH p.variants v "
+            + "LEFT JOIN FETCH v.optionSelections sel "
+            + "LEFT JOIN FETCH sel.optionValue ov "
+            + "LEFT JOIN FETCH ov.option "
+            + "WHERE p.productId = :id")
     Optional<Products> findProductWithDetails(@Param("id") int id);
 
-    @Query("SELECT p.productId, p.name, p.price, " +
-           "c.colorId, c.colorName, s.sizeId, s.sizeName, ps.stockQuantity " +
-           "FROM Products p " +
-           "LEFT JOIN p.colors c " +
-           "LEFT JOIN p.sizes s " +
-           "LEFT JOIN p.stocks ps ON ps.color.colorId = c.colorId AND ps.size.sizeId = s.sizeId " +
-           "WHERE p.productId = :id")
-    List<Object[]> findProduct(@Param("id") int id);
-
-    @Query("SELECT p.productId, p.name, p.price, " +
-       "c.colorId, c.colorName, s.sizeId, s.sizeName " +
-       "FROM Products p " +
-       "LEFT JOIN p.colors c " +
-       "LEFT JOIN p.sizes s " +
-       "WHERE p.productId IN :ids")
-    List<Object[]> findProductList(@Param("ids") List<Integer> ids);
-
-
-
-    /* pageable은 
-        SELECT * FROM product
-        WHERE name LIKE '%keyword%'
-        ORDER BY id
-        LIMIT 10 OFFSET 10; -- limit: 개수(pageSize), offset: 시작 번호 (페이지*개수) 자동계산됨.
+    /**
+     * 캐시/목록용: 상품별 등장하는 옵션 값 행 (variant → 옵션 값 → optionKey).
+     * variant만으로는 valueLabel·optionKey(COLOR/SIZE)를 알 수 없어 조인 깊이는 동일.
      */
+    @Query("SELECT new com.example.product_service.dto.cache.ProductCacheOptionRow("
+           + "p.productId, p.name, p.price, ov.valueId, ov.valueLabel, o.optionKey) "
+           + "FROM Products p "
+           + "LEFT JOIN p.variants v "
+           + "LEFT JOIN v.optionSelections sel "
+           + "LEFT JOIN sel.optionValue ov "
+           + "LEFT JOIN ov.option o "
+           + "WHERE p.productId = :id")
+    List<ProductCacheOptionRow> findProduct(@Param("id") int id);
+
+    @Query("SELECT new com.example.product_service.dto.cache.ProductCacheOptionRow("
+           + "p.productId, p.name, p.price, ov.valueId, ov.valueLabel, o.optionKey) "
+           + "FROM Products p "
+           + "LEFT JOIN p.variants v "
+           + "LEFT JOIN v.optionSelections sel "
+           + "LEFT JOIN sel.optionValue ov "
+           + "LEFT JOIN ov.option o "
+           + "WHERE p.productId IN :ids")
+    List<ProductCacheOptionRow> findProductList(@Param("ids") List<Integer> ids);
+
     Page<ProductDTO> findByNameContaining(String keyword, Pageable pageable);
 }
