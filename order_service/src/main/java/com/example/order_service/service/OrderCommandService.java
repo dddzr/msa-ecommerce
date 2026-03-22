@@ -3,6 +3,8 @@ package com.example.order_service.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
@@ -37,8 +39,9 @@ public class OrderCommandService {
     public OrderItems dtoToOrderItems(OrderItemRequest itemRequest, Orders order) {        
         OrderItems orderItem = new OrderItems();
         orderItem.setProductId(itemRequest.getProductId());
-        orderItem.setSizeId(itemRequest.getSizeId());
-        orderItem.setColorId(itemRequest.getColorId());
+        orderItem.setVariantId(itemRequest.getVariantId() > 0 ? itemRequest.getVariantId() : null);
+        var labels = itemRequest.getOptionLabels();
+        orderItem.setOptionLabelsSnapshot(labels != null ? new LinkedHashMap<>(labels) : new HashMap<>());
         orderItem.setQuantity(itemRequest.getQuantity());
         orderItem.setPrice(itemRequest.getPrice());
         orderItem.setOrder(order); // 주문 객체와 연관 설정
@@ -80,8 +83,8 @@ public class OrderCommandService {
         OrderCreatedEvent event = new OrderCreatedEvent();
         event.setOrderId(savedOrder.getOrderId());
         event.setProductId(savedOrder.getOrderItems().get(0).getProductId());
-        event.setColorId(savedOrder.getOrderItems().get(0).getColorId());
-        event.setSizeId(savedOrder.getOrderItems().get(0).getSizeId());
+        Integer vid = savedOrder.getOrderItems().get(0).getVariantId();
+        event.setVariantId(vid != null ? vid : 0);
         event.setQuantity(savedOrder.getOrderItems().get(0).getQuantity());
         event.setUserId(savedOrder.getUserId());
 

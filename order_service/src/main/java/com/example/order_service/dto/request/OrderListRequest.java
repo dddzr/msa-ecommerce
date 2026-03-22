@@ -11,6 +11,6 @@ public class OrderListRequest {
     private String status = ""; // 배송 상태 (선택적)
     private LocalDate startDate = null; // 조회 시작 날짜 (선택적)
     private LocalDate endDate = null; // 조회 종료 날짜 (선택적)
-    // private int page = 1; // 기본값 1 페이지
-    // private int pageSize = 5; // 기본 페이지 크기 10
+    private int page = 1; // 기본값 1 페이지
+    private int pageSize = 10; // 기본 페이지 크기 10
 }
