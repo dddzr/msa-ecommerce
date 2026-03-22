@@ -2,10 +2,8 @@ package com.example.product_service.controller;
 
 import com.example.product_service.dto.Criteria;
 import com.example.product_service.dto.ProductDetailDTO;
-import com.example.product_service.dto.ProductDTO;
 import com.example.product_service.dto.ProductSearchDTO;
 import com.example.product_service.dto.response.ProductResponse;
-import com.example.product_service.entity.Products;
 import com.example.product_service.service.ProductQueryService;
 
 import lombok.RequiredArgsConstructor;
@@ -36,8 +34,8 @@ public class ProductQueryController {
         return product != null ? ResponseEntity.ok(product) : ResponseEntity.notFound().build();
     }
 
-    // 배치 조회 - 아직 안 씀
-    @GetMapping("/productList/{ids}")
+    // 배치 조회
+    @GetMapping("/productList")
     public ResponseEntity<List<ProductResponse>> getProductList(@RequestParam("ids") List<Integer> ids) {
         // List<CachedProduct> products = ids.stream()
         //         .map(productQueryService::getProductForCache)

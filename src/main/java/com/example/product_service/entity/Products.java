@@ -29,36 +29,31 @@ public class Products {
     private int productId; // 상품 ID
     // private int sellerId; // 판매자 ID
 
-    private String name; // 상품명
-    private String description; // 상품 설명
-    private BigDecimal price; // 상품 가격
-    private String category; // 상품 카테고리
-    private String brand; // 브랜드명
-    private String imageUrl; // 상품 대표 이미지 URL
-    private boolean available; // 상품 구매 가능 여부
+    private String name;
+    private String description;
+    private BigDecimal price;
+    private String category;
+    private String brand;
+    private String imageUrl;
+    private boolean available;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference 
-    private List<ProductStocks> stocks; // 상품별 색상, 사이즈, 재고 관리
-    
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference 
-    private List<ProductColors> colors = new ArrayList<>(); 
- 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference 
-    private List<ProductSizes> sizes = new ArrayList<>();
+    /** 동적 옵션 정의 (색상, 사이즈, 소재 …) */
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<ProductOption> options = new ArrayList<>();
 
-    private int reviewCount; // 상품 리뷰 수
+    /** SKU(재고·옵션 조합) */
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<ProductVariant> variants = new ArrayList<>();
 
-    private BigDecimal discountRate; // 할인율 (0~100)
-    private BigDecimal discountPrice; // 할인 금액
+    private int reviewCount;
+    private BigDecimal discountRate;
+    private BigDecimal discountPrice;
 
     @CreationTimestamp
-    private LocalDateTime createdAt; // 생성 일시    
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    private LocalDateTime updatedAt; // 업데이트 일시
-
-    // Getters and Setters
+    private LocalDateTime updatedAt;
 }
